@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Globe from "react-globe.gl";
 
-import dotTextureTwo from "../../assets/img/dot-texture-two.jpg";
+import dotTextureTwo from "../assets/img/dot-texture-two.jpg";
 
 function CustomGlobe(props) {
   const globeEl = useRef();
