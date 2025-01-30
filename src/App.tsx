@@ -1,6 +1,5 @@
 import { Route, Routes } from "react-router-dom"
-
-import { Home } from "./pages/Home"
+import Home from "./pages/Home"
 import TopBanner from "./components/custom/TopBanner"
 // import { useLoadingStore } from "./state-management/store";
 // import LoadingOverlay from "./components/custom/LoadingOverlay";

@@ -13,7 +13,7 @@ const TopBanner: React.FC = () => {
           properties.
         </p>
         <ShimmerButton
-          className="mt-2 shadow-2xl md:mt-0"
+          className="mt-2 px-6 py-1 border hover:cursor-pointer border-white/30 shadow-2xl md:mt-0"
           onClick={() => {
             navigate("/waitlist");
           }}

@@ -165,6 +165,19 @@ button {
   font-style: normal;
 }
 
+.crypto-shadow {
+  box-shadow: 0 4px 20.9px -3px #00000040 !important;
+}
+
+.connection-shadow {
+  box-shadow: 0 4px 20px 1px #7fb3be82 !important;
+}
+
+.bg-gamma {
+  --tw-bg-opacity: 1;
+  background-color: rgb(222 228 229 / var(--tw-bg-opacity, 1));
+}
+
 @layer base {
   * {
     @apply border-border;
