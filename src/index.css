@@ -4,17 +4,7 @@
 
 :root {
   font-family: "Barlow", system-ui;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: #f7feff;
 }
 
 a {
@@ -50,13 +40,7 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -125,6 +109,60 @@ button:focus-visible {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+}
+
+.bow-100 {
+  font-family: "Barlow", system-ui;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.bow-200 {
+  font-family: "Barlow", system-ui;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.bow-300 {
+  font-family: "Barlow", system-ui;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.bow-400 {
+  font-family: "Barlow", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.bow-500 {
+  font-family: "Barlow", system-ui;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.bow-600 {
+  font-family: "Barlow", system-ui;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.bow-700 {
+  font-family: "Barlow", system-ui;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.bow-800 {
+  font-family: "Barlow", system-ui;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.bow-900 {
+  font-family: "Barlow", system-ui;
+  font-weight: 900;
+  font-style: normal;
 }
 
 @layer base {
