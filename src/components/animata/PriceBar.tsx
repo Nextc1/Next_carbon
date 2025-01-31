@@ -10,12 +10,18 @@ interface TabProps {
   setSelected: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function PriceBar({ tabs, ...props }) {
+interface PriceBarProps {
+  tabs: string[];
+  setCurrency: (currency: string) => void;
+}
+
+export default function PriceBar({ tabs, ...props }: PriceBarProps) {
   const [selected, setSelected] = useState<string>(tabs[0]);
 
   useEffect(() => {
     props.setCurrency(selected);
     console.log(selected);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
   return (

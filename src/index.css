@@ -4,7 +4,6 @@
 
 :root {
   font-family: "Barlow", system-ui;
-  background-color: #f7feff;
 }
 
 a {
@@ -22,6 +21,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #f7feff;
 }
 
 h1 {

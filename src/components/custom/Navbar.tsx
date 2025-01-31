@@ -27,7 +27,7 @@ function Navbar() {
     };
 
     return (
-        <nav className="relative min-w-full flex items-center flex-col border-gray-200  border">
+        <nav className="relative min-w-full flex items-center flex-col">
             {/* Left container: Logo */}
             <div className="flex container items-center justify-between w-full px-4 py-4 md:py-4">
                 <div className="text-3xl font-black md:text-5xl">Exira</div>
@@ -70,7 +70,7 @@ function Navbar() {
                 {/* Right container: Navigation and buttons */}
                 <div
                     className={`${menuOpen ? "flex" : "hidden"
-                        } flex-col md:flex md:flex-row items-center md:gap-4 absolute md:relative top-full left-0 w-full md:w-auto bg-white md:bg-transparent z-10 p-4 md:p-0 md:space-x-4 border-gray-200 md:border-none border`}
+                        } flex-col md:flex md:flex-row items-center md:gap-4 absolute md:relative top-full left-0 w-full md:w-auto bg-white md:bg-transparent z-10 p-4 md:p-0 md:space-x-4 `}
                 >
                     {/* Navigation links */}
                     <div className="flex flex-col gap-4 md:flex-row md:gap-8 md:mr-6">
