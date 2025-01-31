@@ -1,6 +1,4 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import solanaLogo from "../assets/img/solanaLogo.png";
-// import heroImage from "../assets/img/hero.png";
 import HeroCards from "../components/custom/HeroCards";
 import {
   faArrowUpRightDots,
@@ -13,10 +11,8 @@ import {
 import PriceBar from "../components/animata/PriceBar";
 import Footer from "../components/custom/Footer";
 import { useState } from "react";
-import CustomGlobe from "../components/custom/CustomGlobe";
-// import BoxReveal from "../components/magic/TextBoxReveal";
+import CustomGlobe from "../components/CustomGlobe";
 import WordRotate from "../components/magic/TextRotate";
-// import { HeroScrollDemo } from "../components/custom/ContainerCustomerAnimation";
 import { HeroScrollDemo } from "../components/custom/ContainerCustomerAnimation";
 import {
   CardContainer,
@@ -24,10 +20,8 @@ import {
   CardItem,
 } from "../components/aceternity/3DCard";
 
-// import { CustomLamp } from "../components/custom/LampContainer";
 import { useNavigate } from "react-router-dom";
 import { TextGenerateEffect } from "../components/aceternity/text-generate-effect";
-import { CheckCircleIcon } from "lucide-react";
 
 function Home() {
   const [currency, setCurrency] = useState("USD");
@@ -44,23 +38,12 @@ function Home() {
             <div className="mb-3 text-3xl lg:text-3xl">
               The New Age De-Fi Protocol for sustainability projects
             </div>
-            {/* <BoxReveal boxColor={"#000000"} duration={1.0}>
-              <div className="flex flex-col text-5xl gap-y-3 lg:text-[5rem]">
-                <div className="font-bold">Own Real Estate Tokens</div>
-              </div>
-            </BoxReveal> */}
             <div className="flex flex-col font-bold text-5xl gap-y-3 lg:text-[5rem]">
               <TextGenerateEffect words="Own Carbon Credit Tokens" />
             </div>
             <div className="flex flex-col text-5xl font-bold gap-y-3 lg:text-[5rem]">
               <TextGenerateEffect words="Own the Sustainable Future" />
             </div>
-            {/* <BoxReveal boxColor={"#000000"} duration={1.0}>
-              <div className="flex flex-col text-5xl gap-y-3 lg:text-[5rem]">
-                <div className="font-bold">Own the Future</div>
-              </div>
-            </BoxReveal> */}
-
             <div className="mt-4 text-3xl lg:text-[3rem]">
               <p className="lg:leading-[3.5rem] justify-center flex flex-col items-center lg:items-start">
                 <div className="flex flex-row items-center gap-x-3">
@@ -142,9 +125,6 @@ function Home() {
           ))}
         </div>
       </div>
-
-      {/* Blockchain container */}
-      {/* <HomeChain /> */}
 
       {/* Crypto for everyone container */}
       <div className="container flex flex-col justify-center mx-auto lg:flex-row gap-x-10 mt-28">
@@ -304,36 +284,6 @@ function Home() {
           ))}
         </div>
       </div>
-
-      {/* Ask doubts container */}
-      {/* <div className="container flex flex-col items-center justify-center px-6 mx-auto mb-44 my-28">
-        <CustomLamp />
-      </div> */}
-
-      {/* Build wealth container
-      <div className="px-4 pb-32">
-        <div className="container flex flex-col items-center justify-center w-full px-4 py-12 mx-auto bg-black rounded-3xl my-28 gap-y-3">
-          <div className="flex flex-col text-center">
-            <p className="text-2xl font-bold text-white lg:text-3xl">
-              Start building wealth from today
-            </p>
-            <p className="text-lg text-white">
-              Real estate shares are the key to building lasting wealth. Begin
-              your journey with us now.
-            </p>
-          </div>
-          <button
-            className="p-2 px-16 py-3 mt-3 text-black bg-white border-2 rounded-full hover:bg-black hover:border-white hover:text-white"
-            onClick={() => {
-              navigate("/dashboard");
-            }}
-          >
-            Get Started
-          </button>
-        </div>
-      </div> */}
-
-      {/* Footer */}
       <Footer />
     </div>
   );

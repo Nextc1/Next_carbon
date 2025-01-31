@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
-    const [isLogin, setIsLogin] = useState(false);
+    const [isLogin] = useState(false);
 
     // Access location and navigate for routing
     const location = useLocation();
@@ -27,7 +27,7 @@ function Navbar() {
     };
 
     return (
-        <nav className="relative min-w-full flex items-center flex-col border-gray-200  border">
+        <nav className="relative min-w-full flex items-center flex-col">
             {/* Left container: Logo */}
             <div className="flex container items-center justify-between w-full px-4 py-4 md:py-4">
                 <div className="text-3xl font-black md:text-5xl">Exira</div>
@@ -70,10 +70,10 @@ function Navbar() {
                 {/* Right container: Navigation and buttons */}
                 <div
                     className={`${menuOpen ? "flex" : "hidden"
-                        } flex-col md:flex md:flex-row items-center md:gap-4 absolute md:relative top-full left-0 w-full md:w-auto bg-white md:bg-transparent z-10 p-4 md:p-0 md:space-x-4 border-gray-200 md:border-none border`}
+                        } flex-col md:flex md:flex-row items-center md:gap-4 absolute md:relative top-full left-0 w-full md:w-auto bg-white md:bg-transparent z-10 p-4 md:p-0 md:space-x-4 `}
                 >
                     {/* Navigation links */}
-                    <div className="flex flex-col gap-4 md:flex-row md:gap-8 md:mr-6">
+                    <div className="flex flex-col gap-4 md:flex-row md:gap-8 md:mr-2">
                         {["Home", "Dashboard"].map((item, index) => (
                             <span key={index}
                                 className={`text-base md:text-md hover:cursor-pointer hover:underline hover:underline-offset-2 ${location.pathname ===
@@ -95,10 +95,11 @@ function Navbar() {
 
                     {/* Wallet and App buttons */}
                     <div className="flex flex-col items-center gap-4 mt-4 md:flex-row md:mt-0">
-                        <Button className="font-semibold" variant={"default"} onClick={() => setIsLogin(!isLogin)}>
-                            Sign in
-                        </Button>
-
+                        <button
+                            className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
+                        >
+                            <p>Sign in</p>
+                        </button>
                         {/* Conditionally render "Exira App" button */}
                         {!location.pathname.includes("/dashboard") && (
                             <>

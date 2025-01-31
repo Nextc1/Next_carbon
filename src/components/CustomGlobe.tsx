@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useRef, useState } from "react";
 import Globe from "react-globe.gl";
 
 import dotTextureTwo from "../assets/img/dot-texture-two.jpg";
 
-function CustomGlobe(props) {
-  const globeEl = useRef();
+function CustomGlobe() {
+  const globeEl = useRef<any>();
 
-  const containerRef = useRef();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // State to hold the width and height
   const [dimensions, setDimensions] = useState({
@@ -18,7 +19,7 @@ function CustomGlobe(props) {
     const observerTarget = containerRef.current;
 
     const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         setDimensions({
           width: entry.contentRect.width,
           height: entry.contentRect.height,
@@ -90,7 +91,8 @@ function CustomGlobe(props) {
     }, // Thailand
   ];
 
-  const createCountryElement = (country) => {
+  const createCountryElement = (d: object) => {
+    const country = d as { name: string; lat: number; lng: number; icon: string };
     const el = document.createElement("div");
 
     // Add flexbox styles to center the content
@@ -100,15 +102,15 @@ function CustomGlobe(props) {
     el.style.justifyContent = "center";
 
     // Add padding, background, and border radius
-    el.style.padding = "24px"; // Tailwind's p-6 equals 24px
+    el.style.padding = "15px"; // Tailwind's p-6 equals 24px
     el.style.backgroundColor = "white";
     el.style.borderRadius = "12px"; // Tailwind's rounded-xl equals 12px
 
     // Add box shadow
     el.style.boxShadow = "0px 4px 23.1px rgba(0, 0, 0, 0.25)";
 
-    el.style.width = "4rem";
-    el.style.height = "4rem";
+    el.style.width = "3rem";
+    el.style.height = "3rem";
 
     let rawSvg;
     switch (country.icon) {
@@ -168,26 +170,18 @@ function CustomGlobe(props) {
   };
 
   useEffect(() => {
-    // Enable auto-rotation
-    globeEl.current.controls().autoRotate = true;
-    // Set the speed of rotation (lower value means slower rotation)
-    globeEl.current.controls().autoRotateSpeed = 2.5;
+    if (globeEl.current) {
+      // Enable auto-rotation
+      globeEl.current.controls().autoRotate = true;
+      // Set the speed of rotation (lower value means slower rotation)
+      globeEl.current.controls().autoRotateSpeed = 2.5;
 
-    // Disable user interactions
-    globeEl.current.controls().enabled = false;
+      // Disable user interactions
+      globeEl.current.controls().enabled = false;
+    }
   }, []);
 
   return (
-    // <Globe
-    //   ref={globeEl}
-    //   // available options - dotTexture, blueTexture, dotTextureTwo, plainBlack
-    //   globeImageUrl={dotTextureTwo} // Replace with your texture URL
-    //   width={700}
-    //   height={700}
-    //   backgroundColor="#F7FEFF"
-    //   htmlElementsData={countryData} // Pass the country data
-    //   htmlElement={createCountryElement}
-    // />
     <div
       ref={containerRef}
       className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]"
