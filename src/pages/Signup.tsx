@@ -76,7 +76,7 @@ export default function Signup() {
           type: "success",
           text: "Signup successful!",
         });
-        navigate('/login')
+        navigate('/')
       }
     } catch (err: any) {
       setMessage({ type: "error", text: err.message || "Signup failed." });
