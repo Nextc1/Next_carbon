@@ -26,45 +26,6 @@ function Navbar() {
         setMenuOpen(false); // Close menu on selection
     };
 
-
-    //   const handleUSDCdrop = async () => {
-    //     try {
-    //       const response = await axios.post(
-    //         import.meta.env.VITE_BACKEND_URL + "/usdc-drop",
-    //         {
-    //           toAddress: publicKey?.toBase58(), // Replace with the actual destination wallet address
-    //         }
-    //       );
-
-    //       console.log("USDC transferred successfully:", response.data);
-    //       toast.success("1000 Test USDC transferred successfully");
-    //     } catch (error) {
-    //       console.error(
-    //         "Error transferring USDC:",
-    //         error.response ? error.response.data : error.message
-    //       );
-    //     }
-    //   };
-
-    //   const handleSOLdrop = async () => {
-    //     try {
-    //       const response = await axios.post(
-    //         import.meta.env.VITE_BACKEND_URL + "/sol-drop",
-    //         {
-    //           destination: publicKey?.toBase58(), // Replace with actual destination wallet address
-    //         }
-    //       );
-
-    //       console.log("SOL transferred successfully:", response.data);
-    //       toast.success("0.01 SOL transferred successfully");
-    //     } catch (error) {
-    //       console.error(
-    //         "Error transferring SOL:",
-    //         error.response ? error.response.data : error.message
-    //       );
-    //     }
-    //   };
-
     return (
         <nav className="relative min-w-full flex items-center flex-col border-gray-200  border">
             {/* Left container: Logo */}
@@ -113,11 +74,11 @@ function Navbar() {
                 >
                     {/* Navigation links */}
                     <div className="flex flex-col gap-4 md:flex-row md:gap-8 md:mr-6">
-                        {["Home", "About us"].map((item, index) => (
+                        {["Home", "Dashboard"].map((item, index) => (
                             <span key={index}
                                 className={`text-base md:text-md hover:cursor-pointer hover:underline hover:underline-offset-2 ${location.pathname ===
                                     `/${item.toLowerCase().replace(/\s+/g, "-")}`
-                                    ? "underline font-bold"
+                                    ? "underline"
                                     : ""
                                     }`}
                                 onClick={() => {
@@ -134,24 +95,6 @@ function Navbar() {
 
                     {/* Wallet and App buttons */}
                     <div className="flex flex-col items-center gap-4 mt-4 md:flex-row md:mt-0">
-                        <Button className="font-semibold " variant={"default"}
-                        // onClick={() => {
-                        //   // window.open("https://faucet.solana.com/", "_blank");
-                        //   // toast.error("This feature is not available yet");
-                        //   handleSOLdrop();
-                        // }}
-                        >
-                            <p>Get 0.01 SOL</p>
-                        </Button>
-                        <Button className="font-semibold" variant={"default"}
-                        // onClick={() => {
-                        //   // window.open("https://faucet.solana.com/", "_blank");
-                        //   // toast.error("This feature is not available yet");
-                        //   handleUSDCdrop();
-                        // }}
-                        >
-                            <p>Get 1000 Test USDC</p>
-                        </Button>
                         <Button className="font-semibold" variant={"default"} onClick={() => setIsLogin(!isLogin)}>
                             Sign in
                         </Button>
