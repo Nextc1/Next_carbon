@@ -3,11 +3,11 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
-import {
-  fetchAllDigitalAssetByOwner,
-  fetchDigitalAsset,
-} from "@metaplex-foundation/mpl-token-metadata";
-// import { on } from "events";
+// import {
+//   fetchAllDigitalAssetByOwner,
+//   fetchDigitalAsset,
+// } from "@metaplex-foundation/mpl-token-metadata";
+// // import { on } from "events";
 
 const supabase = createClient(
   "https://ubxuzhytajrlndftekqi.supabase.co",

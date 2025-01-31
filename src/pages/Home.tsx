@@ -264,7 +264,7 @@ function Home() {
           ].map((_, index) => (
             <div
               key={index}
-              className="flex flex-col items-center p-6 px-12 gap-y-3 rounded-3xl bg-black/10"
+              className="flex flex-col items-center p-6 px-12 gap-y-3 rounded-3xl bg-gamma"
             >
               <p className="text-2xl">{_.title}</p>
               <div className="leading-none">

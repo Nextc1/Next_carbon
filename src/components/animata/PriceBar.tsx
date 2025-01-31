@@ -19,7 +19,7 @@ export default function PriceBar({ tabs, ...props }) {
   }, [selected]);
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-0 p-0 rounded-full w-fit bg-black/10">
+    <div className="flex flex-wrap items-center justify-center gap-0 p-0 rounded-full w-fit bg-gamma">
       {tabs.map((tab) => (
         <Tab
           text={tab}
