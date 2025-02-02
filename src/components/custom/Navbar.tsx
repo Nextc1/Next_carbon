@@ -33,7 +33,7 @@ function Navbar() {
         <nav className="relative min-w-full flex items-center flex-col">
             {/* Left container: Logo */}
             <div className="flex container items-center justify-between w-full px-4 py-4 md:py-4">
-                <div className="text-3xl font-black md:text-5xl">Exira</div>
+                <button className="text-3xl font-black md:text-5xl p-0" onClick={()=>(navigate('/'))}>Exira</button>
 
                 {/* Mobile menu button */}
                 <div className="flex items-center md:hidden">
@@ -100,13 +100,13 @@ function Navbar() {
                     <div className="flex flex-col items-center gap-4 mt-4 md:flex-row md:mt-0">
 
                         {user ? <>
-                        <button onClick={handleLogout} className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white">
+                        <button onClick={handleLogout} className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white">
                         <p>Sign out</p>
                         </button>
                         </>:<>
 
                         <button onClick={()=>navigate('/login')}
-                            className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
+                            className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
                         >
                             <p>Sign in</p>
                         </button>
