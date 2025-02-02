@@ -5,12 +5,15 @@ import {
     faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "../ui/button";
+import { useAuth } from "@/hooks/AuthContext";
 
 function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
     const [isLogin] = useState(false);
-
+    
+    //Auth Hook 
+    const {user, handleLogout} = useAuth()
     // Access location and navigate for routing
     const location = useLocation();
     const navigate = useNavigate();
@@ -95,11 +98,19 @@ function Navbar() {
 
                     {/* Wallet and App buttons */}
                     <div className="flex flex-col items-center gap-4 mt-4 md:flex-row md:mt-0">
-                        <button
+
+                        {user ? <>
+                        <button onClick={handleLogout} className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white">
+                        <p>Sign out</p>
+                        </button>
+                        </>:<>
+
+                        <button onClick={()=>navigate('/login')}
                             className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
                         >
                             <p>Sign in</p>
                         </button>
+                        </>}
                         {/* Conditionally render "Exira App" button */}
                         {!location.pathname.includes("/dashboard") && (
                             <>

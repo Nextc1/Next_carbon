@@ -6,6 +6,8 @@ import TopBanner from "./components/custom/TopBanner"
 import { Toaster } from "./components/ui/toaster";
 import Navbar from "./components/custom/Navbar";
 import { Dashboard } from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 function App(){
   // const { isLoading } = useLoadingStore();
@@ -17,6 +19,8 @@ function App(){
       <Routes>
         <Route path="/" element={<Home />}/>
         <Route path="/dashboard" element={<Dashboard />}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/signup" element={<Signup/>}/>
       </Routes>
       <Toaster />
     </div>
