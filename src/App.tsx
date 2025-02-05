@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom"
+import { Route, Routes, useLocation } from "react-router-dom"
 import Home from "./pages/Home"
 import TopBanner from "./components/custom/TopBanner"
 // import { useLoadingStore } from "./state-management/store";
@@ -11,11 +11,14 @@ import Signup from "./pages/Signup";
 
 function App(){
   // const { isLoading } = useLoadingStore();
-
+  const location = useLocation();
+  const isDashboardPage = location.pathname.includes("/dashboard");
   return (
     <div className="min-h-screen overflow-x-hidden">
-       {location.pathname.includes("/dashboard") ? null : <TopBanner />}
-       {location.pathname.includes("/dashboard") ? null : <Navbar />}
+       {/* {location.pathname.includes("/dashboard") ? null : <TopBanner />}
+       {location.pathname.includes("/dashboard") ? null : <Navbar />} */}
+       {!isDashboardPage && <TopBanner />}
+       {!isDashboardPage && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />}/>
         <Route path="/dashboard" element={<Dashboard />}/>
