@@ -40,9 +40,9 @@ const Sidebar = () => {
       }
 
   return (
-    <div>
-      <div className="absolute  top-12 left-0  p-2 bg-gray-200 rounded-full" onClick={handleMenu}>{menuOpen?<ChevronFirst />:<ChevronLast />}</div>
-      <aside className={`${menuOpen?'w-[18rem]':'w-0'} h-full bg-gray-100 border-r border-gray-200`}>
+    <div className="relative">
+      <div className="absolute  top-12 -right-10  p-2 bg-gray-200 rounded-full" onClick={handleMenu}>{menuOpen?<ChevronFirst />:<ChevronLast />}</div>
+      <aside className={`${menuOpen?'w-[18rem]':'hidden'} h-full bg-gray-100 border-r border-gray-200`}>
         <div className="p-6">
           <h1 className="mt-6 mb-12 text-center text-4xl font-black">Next Carbon</h1>
           <div className="space-y-6">
@@ -103,7 +103,6 @@ const Sidebar = () => {
           </div>
         </div>
       </aside>
-        
     </div>
   )
 }
