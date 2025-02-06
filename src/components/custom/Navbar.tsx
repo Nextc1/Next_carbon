@@ -10,18 +10,17 @@ import { useAuth } from "@/hooks/AuthContext";
 function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
-    const [isLogin] = useState(false);
-    
+
     //Auth Hook 
-    const {user, handleLogout} = useAuth()
+    const { user, handleLogout } = useAuth()
     // Access location and navigate for routing
     const location = useLocation();
     const navigate = useNavigate();
 
     // Handle the navigation to the app
-    const handleGoToApp = () => {
-        navigate("/dashboard");
-    }
+    // const handleGoToApp = () => {
+    //     navigate("/dashboard");
+    // }
 
     // Handle navigation and close menu for mobile
     const handleNavigate = (path: string) => {
@@ -29,11 +28,12 @@ function Navbar() {
         setMenuOpen(false); // Close menu on selection
     };
 
+    console.log("userDeatils", user)
     return (
         <nav className="relative min-w-full flex items-center flex-col">
             {/* Left container: Logo */}
             <div className="flex container items-center justify-between w-full px-4 py-4 md:py-4">
-                <button className="text-3xl font-black bg-transparent md:text-5xl p-0" onClick={()=>(navigate('/'))}>Exira</button>
+                <button className="text-3xl font-black bg-transparent md:text-5xl p-0" onClick={() => (navigate('/'))}>Exira</button>
 
                 {/* Mobile menu button */}
                 <div className="flex items-center md:hidden">
@@ -77,7 +77,7 @@ function Navbar() {
                 >
                     {/* Navigation links */}
                     <div className="flex flex-col gap-4 md:flex-row md:gap-8 md:mr-2">
-                        {["Home", "Dashboard"].map((item, index) => (
+                        {["Home"].map((item, index) => (
                             <span key={index}
                                 className={`text-base md:text-md hover:cursor-pointer hover:underline hover:underline-offset-2 ${location.pathname ===
                                     `/${item.toLowerCase().replace(/\s+/g, "-")}`
@@ -98,29 +98,28 @@ function Navbar() {
 
                     {/* Wallet and App buttons */}
                     <div className="flex flex-col items-center gap-4 mt-4 md:flex-row md:mt-0">
-
                         {user ? <>
-                        <button onClick={handleLogout} className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white">
-                        <p>Sign out</p>
-                        </button>
-                        </>:<>
+                            <button onClick={handleLogout} className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white">
+                                <p>Sign out</p>
+                            </button>
+                        </> : <>
 
-                        <button onClick={()=>navigate('/login')}
-                            className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
-                        >
-                            <p>Sign in</p>
-                        </button>
+                            <button onClick={() => navigate('/login')}
+                                className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
+                            >
+                                <p>Sign in</p>
+                            </button>
                         </>}
                         {/* Conditionally render "Exira App" button */}
                         {!location.pathname.includes("/dashboard") && (
                             <>
-                                {isLogin ? (
-                                    <Button className="font-semibold " variant={"default"} onClick={handleGoToApp}>
-                                        <div className="flex flex-row items-center justify-center gap-2">
-                                            <p>App</p>
-                                            <FontAwesomeIcon icon={faChevronRight} size="2xs" />
-                                        </div>
-                                    </Button>
+                                {user ? (
+                                    <button onClick={() => navigate('/dashboard')}
+                                        className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
+                                    >
+                                       <p>App</p>
+                                       <FontAwesomeIcon icon={faChevronRight} size="2xs" />
+                                    </button>
                                 ) : null}
                             </>
                         )}
