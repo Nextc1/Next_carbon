@@ -207,7 +207,7 @@ const AllProducts = () => {
                 <img
                   src={project.image}
                   alt={project.name}
-                  className="min-w-12 md:w-12w h-12 rounded-xl object-cover"
+                  className="min-w-12 md:w-12 h-12 rounded-xl object-cover"
                 />
               </TableCell>
               <TableCell>
