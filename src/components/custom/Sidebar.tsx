@@ -6,14 +6,12 @@ import {
     faSeedling,
   } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ChevronFirst, ChevronLast } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Sidebar = () => {
+const Sidebar = ({isOpen}:{isOpen:boolean}) => {
 
   const [activeMenu, setActiveMenu] = useState<string>("All Properties");
-  const [menuOpen , setMenuOpen] = useState<boolean>(true)
 
   const navigate = useNavigate()
     const menuItems = [
@@ -35,16 +33,13 @@ const Sidebar = () => {
         },
       ];
 
-      const handleMenu =()=>{
-        setMenuOpen(!menuOpen)
-      }
 
   return (
-    <div>
-      <div className="absolute  top-12 left-0  p-2 bg-gray-200 rounded-full" onClick={handleMenu}>{menuOpen?<ChevronFirst />:<ChevronLast />}</div>
-      <aside className={`${menuOpen?'w-[18rem]':'w-0'} h-full bg-gray-100 border-r border-gray-200`}>
+    <div className="fixed left-0 z-20 lg:relative h-full">
+      {/* <div className="absolute  top-12 -right-10  p-2 bg-gray-200 rounded-full" onClick={handleMenu}>{isOpen?<ChevronFirst />:<ChevronLast />}</div> */}
+      <aside className={`${isOpen?'w-[18rem]':'hidden'} h-full bg-gray-100 border-r border-gray-200`}>
         <div className="p-6">
-          <h1 className="mt-6 mb-12 text-center text-4xl font-black">Next Carbon</h1>
+          <h1 className="mt-10 lg:mt-6 mb-12 text-center text-4xl font-black">Next Carbon</h1>
           <div className="space-y-6">
             <div className="flex flex-col items-start w-full">
               <h2 className="font-semibold text-gray-500 text-md mb-">
@@ -58,7 +53,7 @@ const Sidebar = () => {
                     key={item.name}
                     className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${
                       activeMenu === item.name
-                        ? "bg-gray-200 font-semibold"
+                        ? "bg-gray-200"
                         : "hover:bg-gray-200"
                     }`}
                     onClick={() => {
@@ -103,7 +98,6 @@ const Sidebar = () => {
           </div>
         </div>
       </aside>
-        
     </div>
   )
 }
