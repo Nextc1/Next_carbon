@@ -16,8 +16,6 @@ function App() {
   const isDashboardPage = location.pathname.includes("/dashboard");
   return (
     <div className="min-h-screen overflow-x-hidden">
-      {/* {location.pathname.includes("/dashboard") ? null : <TopBanner />}
-       {location.pathname.includes("/dashboard") ? null : <Navbar />} */}
       {!isDashboardPage && <TopBanner />}
       {!isDashboardPage && <Navbar />}
       <Routes>

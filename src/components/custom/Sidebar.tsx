@@ -53,7 +53,7 @@ const Sidebar = ({isOpen}:{isOpen:boolean}) => {
                     key={item.name}
                     className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${
                       activeMenu === item.name
-                        ? "bg-gray-200 font-semibold"
+                        ? "bg-gray-200"
                         : "hover:bg-gray-200"
                     }`}
                     onClick={() => {
