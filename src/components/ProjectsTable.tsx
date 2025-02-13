@@ -4,7 +4,7 @@ import {
 import usdcCoin from "../assets/svg/usd-coin.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowTrendDown, faArrowTrendUp } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
     Dropdown,
@@ -12,10 +12,13 @@ import {
     DropdownMenu,
     DropdownItem,
     Button,
-    Input
+    Input,
+    Selection,
+    SortDescriptor
 } from "@nextui-org/react";
 import { ChevronDownIcon } from "./custom/dashboard/icons/ChevronDownIcon";
 import { SearchIcon } from "./custom/dashboard/icons/SearchIcon";
+import { ChevronUpIcon } from "lucide-react";
 
 interface Project {
     id: string;
@@ -35,23 +38,64 @@ interface Project {
 
 const columns = [
     { uid: "cover", name: "" },
-    { uid: "Name", name: "Project Name" },
-    { uid: "propertyType", name: "Project Type" },
+    { uid: "name", name: "Project Name" },
+    { uid: "type", name: "Project Type" },
     { uid: "status", name: "Status" },
-    { uid: "currentPrice", name: "Current Price" },
+    { uid: "price", name: "Current Price" },
     { uid: "growth", name: "Growth" },
-    { uid: "availableShares", name: "Available Shares" },
+    { uid: "available_shares", name: "Available Shares" },
     { uid: "actions", name: "Actions" },
 ];
+
+const priceFilters = ["Low to High", "High to Low"];
 
 export const ProjectsTable = () => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [projectTypes, setProjectTypes] = useState<string[]>([]);
-    const [selectedType, setSelectedType] = useState<string | null>(null);
+    const [selectedTypes, setSelectedTypes] = useState<Selection>(new Set(["all"]));
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [priceSort, setPriceSort] = useState<string | null>(null);
+    const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
+        column: "name",
+        direction: "ascending",
+    });
+    const [selectedPrice, setSelectedPrice] = useState<string>("Price");
 
+    const filteredProjects = useMemo(() => {
+        let filtered = [...projects];
+
+        // Filter by selected types
+        const typesSet = selectedTypes as Set<string>;
+        if (!typesSet.has("all")) {
+            filtered = filtered.filter(project =>
+                Array.from(selectedTypes).includes(project.type)
+            );
+        }
+        // Filter by search query
+        if (searchQuery) {
+            filtered = filtered.filter(project =>
+                project.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+        // Sort by price
+        if (selectedPrice === "Low to High") {
+            filtered.sort((a, b) => a.price - b.price);
+        } else if (selectedPrice === "High to Low") {
+            filtered.sort((a, b) => b.price - a.price);
+        }
+        return filtered;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projects, selectedTypes, searchQuery]);
+
+    const sortedProjects = useMemo(() => {
+        return [...filteredProjects].sort((a, b) => {
+            const first = a[sortDescriptor.column as keyof Project] ?? '';
+            const second = b[sortDescriptor.column as keyof Project] ?? '';
+            const cmp = (first < second ? -1 : 1) * (sortDescriptor.direction === "descending" ? -1 : 1);
+            return cmp;
+        });
+    }, [filteredProjects, sortDescriptor]);
+    
     useEffect(() => {
         const fetchProjects = async () => {
             setLoading(true);
@@ -66,37 +110,33 @@ export const ProjectsTable = () => {
                 setProjectTypes(types);
             }
             setLoading(false);
-        }
+        };
 
         fetchProjects();
     }, []);
 
-    const filteredProjects = projects.filter(project =>
-        (!selectedType || project.type === selectedType) &&
-        (!searchQuery || project.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    ).sort((a, b) => {
-        if (priceSort === "low to high") return a.price - b.price;
-        if (priceSort === "high to low") return b.price - a.price;
-        return 0;
-    });
-
     if (loading) {
-        return <div>Loading...</div>
+        return <div>Loading...</div>;
     }
 
     return (
         <div>
             <div className="flex flex-col items-center justify-between gap-4 mt-8 mb-6 md:flex-row">
-                <div className=" flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-4">
                     {/* Property Type Filter */}
                     <Dropdown>
                         <DropdownTrigger>
                             <Button endContent={<ChevronDownIcon />} variant="flat" className="h-12 text-base">
-                                {selectedType || "Project Type"}
+                                Project Type
                             </Button>
                         </DropdownTrigger>
-                        <DropdownMenu>
-                            <DropdownItem key="" onClick={() => setSelectedType(null)}>All Types</DropdownItem>
+                        <DropdownMenu
+                            selectionMode="multiple"
+                            selectedKeys={selectedTypes}
+                            onSelectionChange={setSelectedTypes}
+                            closeOnSelect={false}
+                        >
+                            <DropdownItem key="all">All Types</DropdownItem>
                             <>
                                 {projectTypes.map(type => (
                                     <DropdownItem key={type}>{type}</DropdownItem>
@@ -104,29 +144,41 @@ export const ProjectsTable = () => {
                             </>
                         </DropdownMenu>
                     </Dropdown>
-
                     {/* Price Filter */}
                     <Dropdown>
                         <DropdownTrigger>
-                            <Button
-                                endContent={<ChevronDownIcon />}
-                                variant="flat"
-                                className="h-12 text-md"
+                            <Button 
+                                endContent={<ChevronDownIcon />} 
+                                variant="flat" 
+                                className="h-12 text-base"
                             >
-                                Price
+                                {selectedPrice}
                             </Button>
                         </DropdownTrigger>
-                        <DropdownMenu onAction={key => setPriceSort(key as string)}>
-                            <DropdownItem key="">All Prices</DropdownItem>
-                            <DropdownItem key="low to high">Low to High</DropdownItem>
-                            <DropdownItem key="high to low">High to Low</DropdownItem>
+                        <DropdownMenu 
+                            selectionMode="single"
+                            selectedKeys={new Set([selectedPrice])}
+                            onSelectionChange={(keys) => {
+                                const selected = Array.from(keys)[0] as string;
+                                setSelectedPrice(selected);
+                                setSortDescriptor({
+                                    column: "price",
+                                    direction: selected === "Low to High" ? "ascending" : "descending"
+                                });
+                            }}
+                        >
+                            {priceFilters.map((price) => (
+                                <DropdownItem key={price}>
+                                    {price}
+                                </DropdownItem>
+                            ))}
                         </DropdownMenu>
                     </Dropdown>
                 </div>
 
                 {/* Search Input */}
                 <Input
-                    className="w-full max-w-lg text-base bg-gamma rounded-xl"
+                    className="w-full max-w-lg text-base bg-gray-100 rounded-xl"
                     placeholder="Search for a property by name"
                     startContent={<SearchIcon className="mr-1" />}
                     size="lg"
@@ -134,7 +186,13 @@ export const ProjectsTable = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
-            <Table isStriped aria-label="Example static collection table" className="w-[94vw] md:w-full overflow-x-scroll border rounded-2xl">
+            <Table
+                isStriped
+                aria-label="Example static collection table"
+                className="w-[94vw] md:w-full overflow-x-scroll border rounded-2xl"
+                sortDescriptor={sortDescriptor}
+                onSortChange={setSortDescriptor}
+            >
                 <TableHeader columns={columns}>
                     {(column) => (
                         <TableColumn
@@ -143,12 +201,12 @@ export const ProjectsTable = () => {
                             align={column.uid === "actions" ? "center" : "start"}
                             className="text-black text-base"
                         >
-                            {column.name}
+                            <div className="flex gap-2 items-center group">{column.name} <span className="opacity-0 ease-in-out transition-opacity duration-300 group-hover:opacity-100"><ChevronUpIcon /></span></div>
                         </TableColumn>
                     )}
                 </TableHeader>
                 <TableBody>
-                    {filteredProjects.map((project, index) => (
+                    {sortedProjects.map((project:Project, index:number) => (
                         <TableRow key={index} className={`${index % 2 !== 0 ? "bg-gray-100" : ""}`}>
                             <TableCell>
                                 <img
@@ -186,5 +244,5 @@ export const ProjectsTable = () => {
                 </TableBody>
             </Table>
         </div>
-    )
-}
+    );
+};
