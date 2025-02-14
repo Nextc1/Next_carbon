@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AllProducts from "./components/custom/dashboard/pages/AllProducts";
 import AuthMiddleware from "./components/custom/auth/AuthMiddleware";
+import PropertyView from "./pages/PropertyView";
 
 function App() {
   // const { isLoading } = useLoadingStore();
@@ -24,6 +25,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard>
           <AllProducts />
         </Dashboard>} />
+        <Route path="/property/view" element={<PropertyView/>}/>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route
