@@ -19,7 +19,7 @@ const PropertyView = () => {
   const navigate = useNavigate();
   return (
     <div className="flex min-w-full justify-center relative">
-      <div className="container flex flex-col lg:flex-row h-[120vh] overflow-y-auto [&::-webkit-scrollbar]:hidden scrollbar-none">
+      <div className="container flex flex-col lg:flex-row h-[120vh] overflow-y-auto [&::-webkit-scrollbar]:hidden scrollbar-none items-center lg:items-start">
         {/* left container */}
         <div className="p-6 text-left mb-16">
           <div className="flex flex-row items-center justify-between w-full">
@@ -101,7 +101,7 @@ const PropertyView = () => {
           <div className="flex flex-col items-">
             {/* left container */}
             <p className="mt-2 mb-4 text-lg leading-tight text-black">
-              {/* {currentProperty.JSONData.description} */}
+              {/* {currentProperty.description} */}
               Carbon Capture Fields is a visionary land project designed for
               environmental sustainability. Situated on the outskirts of Pune,
               Maharashtra, this site is earmarked for innovative carbon capture
@@ -113,7 +113,7 @@ const PropertyView = () => {
             {/* divider */}
             <div className="px-0 mx-0 divider divider-horizontal"></div>
             {/* right container */}
-            <div className="grid grid-cols-4 py-2 mb-6 gap-y-4 gap-x-4 w-fit">
+            <div className="flex justify-start py-2 mb-6 gap-y-4 gap-x-4 w-fit">
               {/* area */}
               <div className="flex flex-row items-center w-40 p-2 pl-4 bg-white border border-black rounded-xl gap-x-4">
                 <div>
@@ -243,7 +243,7 @@ const PropertyView = () => {
         </div>
 
         {/* right container  */}
-        <div className="w-full p-6 md:w-[40rem] md:sticky md:top-0 md:h-screen flex flex-col gap-y-4">
+        <div className="w-full p-6 md:w-[40rem] md:sticky md:top-0 md:h-screen flex flex-col gap-y-4 ">
           {/* token metadata container */}
           <div className="flex flex-col items-start p-8 bg-white rounded-3xl justify-center invest-shadow shadow-2xl  shadow-black">
             {/* header */}
@@ -321,7 +321,7 @@ const PropertyView = () => {
             <div className="py-3 my-0 divider before:bg-black/5 after:bg-black/5"></div>
 
             {/* number stats container */}
-            <div className="grid w-full grid-cols-4 mt-0 gap-y-4">
+            <div className="grid w-full grid-cols-4 mt-0 gap-y-3">
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Owners</p>
                 {/* <p className="text-2xl font-bold">
@@ -351,7 +351,7 @@ const PropertyView = () => {
                   {/* {currentProperty.JSONData.attributes.sharePerNFT.toFixed(
             4
           )} */}
-                  0.0159 %
+                  0.0159%
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center">

@@ -58,7 +58,10 @@ export default {
   		},
   		animation: {
   			'shimmer-slide': 'shimmer-slide var(--speed) ease-in-out infinite alternate',
-  			'spin-around': 'spin-around calc(var(--speed) * 2) infinite linear'
+  			'spin-around': 'spin-around calc(var(--speed) * 2) infinite linear',
+			"reveal-down": "revealDown 1s ease-in-out forwards",
+        "reveal-up": "revealUp 1s ease-in-out forwards",
+        "content-blur": "contentBlur 1s ease-in-out forwards",
   		},
   		keyframes: {
   			'shimmer-slide': {
@@ -79,7 +82,19 @@ export default {
   				'100%': {
   					transform: 'translateZ(0) rotate(360deg)'
   				}
-  			}
+  			},
+			  revealDown: {
+				"0%": { transform: "translateY(-100%)", opacity: 0 },
+				"100%": { transform: "translateY(0)", opacity: 1 },
+			  },
+			  revealUp: {
+				"0%": { transform: "translateY(100%)", opacity: 0 },
+				"100%": { transform: "translateY(0)", opacity: 1 },
+			  },
+			  contentBlur: {
+				"0%": { filter: "blur(12px)", opacity: 0 },
+				"100%": { filter: "blur(0)", opacity: 1 },
+			  },
   		}
   	}
   },
