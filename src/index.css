@@ -178,6 +178,10 @@ button {
   background-color: rgb(222 228 229 / var(--tw-bg-opacity, 1));
 }
 
+.invest-shadow{
+  box-shadow: 0 4px 22.4px 7px #00000040;
+}
+
 @layer base {
   * {
     @apply border-border;
