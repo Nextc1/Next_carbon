@@ -20,7 +20,6 @@ export default function PriceBar({ tabs, ...props }: PriceBarProps) {
 
   useEffect(() => {
     props.setCurrency(selected);
-    console.log(selected);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 

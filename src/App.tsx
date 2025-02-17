@@ -17,7 +17,7 @@ function App() {
   const location = useLocation();
   const isDashboardPage = location.pathname.includes("/dashboard");
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden relative">
       {!isDashboardPage && <TopBanner />}
       {!isDashboardPage && <Navbar />}
       <Routes>
