@@ -60,8 +60,8 @@ export default {
   			'shimmer-slide': 'shimmer-slide var(--speed) ease-in-out infinite alternate',
   			'spin-around': 'spin-around calc(var(--speed) * 2) infinite linear',
 			"reveal-down": "revealDown 1s ease-in-out forwards",
-        "reveal-up": "revealUp 1s ease-in-out forwards",
-        "content-blur": "contentBlur 1s ease-in-out forwards",
+			"reveal-up": "revealUp 1s ease-in-out forwards",
+			"content-blur": "contentBlur 1s ease-in-out forwards",
   		},
   		keyframes: {
   			'shimmer-slide': {

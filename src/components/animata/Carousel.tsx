@@ -1,7 +1,5 @@
 import { HTMLAttributes, useEffect, useState } from "react";
-
 import { cn } from "@/lib/utils";
-import WaveReveal from "./WaveReveal";
 
 interface ImageProps extends HTMLAttributes<HTMLDivElement> {
   item: { image: string; title: string };
@@ -19,7 +17,7 @@ const List = ({ item, className, index, activeItem, ...props }: ImageProps) => {
   return (
     <div
       className={cn(
-        "relative flex h-full w-20 min-w-10 cursor-pointer overflow-hidden rounded-md transition-all delay-0 duration-300 ease-in-out",
+        "relative flex h-full w-20 min-w-10 cursor-pointer rounded-md transition-all delay-0 duration-300 ease-in-out group",
         {
           "flex-grow": index === activeItem,
         },
@@ -30,18 +28,21 @@ const List = ({ item, className, index, activeItem, ...props }: ImageProps) => {
       <img
         src={item.image}
         alt={item.title}
-        className={cn("h-full w-full object-cover", {
-          "blur-[2px]": index !== activeItem,
+        className={cn("h-full w-full object-cover rounded-md", {
+          "": index !== activeItem,
         })}
       />
       {index === activeItem && (
-        <div className="absolute text-white bottom-4 left-4 min-w-fit md:bottom-8 md:left-8">
-          <WaveReveal
-            duration="1000ms"
-            className="items-start justify-start text-xl sm:text-2xl md:text-6xl"
-            text={item.title}
-            direction="up"
-          />
+        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-black/30 to-transparent p-4 md:p-8">
+          <h2
+            className={cn(
+              "text-xl sm:text-2xl md:text-6xl font-bold text-white drop-shadow-lg",
+              "opacity-100", // Text is always visible
+              "animate-reveal-up animate-content-blur" // Animation for new text
+            )}
+          >
+            {item.title}
+          </h2>
         </div>
       )}
     </div>

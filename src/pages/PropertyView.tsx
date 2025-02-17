@@ -14,9 +14,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/AuthContext";
+
 
 const PropertyView = () => {
   const navigate = useNavigate();
+  const { user } = useAuth()
+
   return (
     <div className="flex min-w-full justify-center relative">
       <div className="container flex flex-col lg:flex-row h-[120vh] overflow-y-auto [&::-webkit-scrollbar]:hidden scrollbar-none items-center lg:items-start">
@@ -53,50 +57,6 @@ const PropertyView = () => {
             {/* {currentProperty?.Name} */}
             Carbon Capture Fields
           </h1>
-          {/* property type */}
-          {/* <div className="flex flex-row items-center my-3 mt-6 mb-2 gap-x-2">
-                {currentProperty.JSONData.attributes.propertyType ===
-                "residential" ? (
-                  <div className="px-4 py-2 mr-2 text-sm font-bold text-white bg-blue-500 rounded-full">
-                    Residential
-                  </div>
-                ) : currentProperty.JSONData.attributes.propertyType ===
-                  "farmingLand" ? (
-                  <div className="px-4 py-2 mr-2 text-sm font-bold text-white bg-green-500 rounded-full">
-                    Farming
-                  </div>
-                ) : currentProperty.JSONData.attributes.propertyType ===
-                  "commercial" ? (
-                  <div className="px-4 py-2 mr-2 text-sm font-bold text-white bg-yellow-500 rounded-full">
-                    Commercial
-                  </div>
-                ) : currentProperty.JSONData.attributes.propertyType ===
-                  "emptyPlot" ? (
-                  <div className="px-4 py-2 mr-2 text-sm font-bold text-white bg-black rounded-full">
-                    Empty Plot
-                  </div>
-                ) : currentProperty.JSONData.attributes.propertyType ===
-                  "industrial" ? (
-                  <div className="px-4 py-2 mr-2 text-sm font-bold text-white bg-orange-500 rounded-full">
-                    Industrial
-                  </div>
-                ) : null}
-                <p className="flex flex-row items-center text-lg text-black">
-                  <svg
-                    className="w-5 h-5 mr-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <p className="text-lg">{currentProperty.Location}</p>
-                </p>
-              </div> */}
           {/* description container */}
           <div className="flex flex-col items-">
             {/* left container */}
@@ -195,8 +155,8 @@ const PropertyView = () => {
           <ViewPageUpdates />
           <h2 className="mt-8 mb-0 text-xl font-bold">Image Gallery</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
-          <div className="mb-6 bg-gray-200 rounded-lg">
-            <Carousel className="w-min-72 storybook-fix" />
+          <div className="mb-6 bg-gray-200 rounded-lg ">
+            <Carousel className="w-min-72 storybook-fix relative" />
             {/* <Expandable className="w-full min-w-72 storybook-fix" /> */}
           </div>
           {/* location */},
@@ -243,7 +203,7 @@ const PropertyView = () => {
         </div>
 
         {/* right container  */}
-        <div className="w-full p-6 md:w-[40rem] md:sticky md:top-0 md:h-screen flex flex-col gap-y-4 ">
+        <div className="w-full p-6 md:w-[40rem] md:sticky md:top-0 lg:h-screen flex flex-col gap-y-4 pb-20 lg:pb-0">
           {/* token metadata container */}
           <div className="flex flex-col items-start p-8 bg-white rounded-3xl justify-center invest-shadow shadow-2xl  shadow-black">
             {/* header */}
@@ -482,14 +442,27 @@ const PropertyView = () => {
               />
             </div>
 
-            <button
+            {user ? <>
+              <button className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
+                onClick={() => {
+                  // handleBuy();
+                }}>
+                <p>Invest Now with USDC</p>
+              </button>
+            </> : <>
+              <button className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
+                onClick={() => navigate('/login')}>
+                <p>Login to Invest</p>
+              </button>
+            </>}
+            {/* <button
               className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
               onClick={() => {
                 // handleBuy();
               }}
             >
               Invest Now with USDC
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
