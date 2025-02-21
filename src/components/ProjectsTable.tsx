@@ -20,22 +20,23 @@ import { ChevronDownIcon } from "./custom/dashboard/icons/ChevronDownIcon";
 import { SearchIcon } from "./custom/dashboard/icons/SearchIcon";
 import { ChevronUpIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Project } from "index";
 
-interface Project {
-    id: string;
-    created_at: string;
-    name: string;
-    status: string;
-    price: number;
-    available_shares: number;
-    location: string;
-    type: string;
-    image: string;
-    attributes?: undefined;
-    value_parameters?: undefined;
-    updates?: undefined;
-    growth: string;
-}
+// interface Project {
+//     id: string;
+//     created_at: string;
+//     name: string;
+//     status: string;
+//     price: number;
+//     available_shares: number;
+//     location: string;
+//     type: string;
+//     image: string;
+//     attributes?: undefined;
+//     value_parameters?: undefined;
+//     updates?: undefined;
+//     growth: string;
+// }
 
 const columns = [
     { uid: "cover", name: "" },
@@ -238,7 +239,7 @@ export const ProjectsTable = () => {
                             <TableCell className="text-base">{project.available_shares}</TableCell>
                             <TableCell>
                                 
-                                <button onClick={()=>{navigate('/property/view')}} className="px-2 py-1 md:px-4 md:py-2 min-w-20 font-bold text-white bg-black border-2 border-black rounded-full hover:bg-white hover:text-black">
+                                <button onClick={()=>{navigate(`/property/view/${project.id}`)}} className="px-2 py-1 md:px-4 md:py-2 min-w-20 font-bold text-white bg-black border-2 border-black rounded-full hover:bg-white hover:text-black">
                                     View & Buy
                                 </button>
                             </TableCell>

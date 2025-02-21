@@ -15,11 +15,42 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { Project } from "index";
 
 
 const PropertyView = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<Project | null>(null);
   const { user } = useAuth()
+  const propertyId = window.location.pathname.split('/').pop();
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('property_data').select('*').eq('id', propertyId);
+      if (error) {
+        alert("error");
+        // setData(data);
+      }
+      if (data) {
+
+        setData(data[0]);
+        // const types = Array.from(new Set(data.map(project => project.type)));
+        // setData(types);
+      }
+      setLoading(false);
+    };
+
+    fetchProjects();
+  }, []);
+
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex min-w-full justify-center relative">
@@ -55,20 +86,14 @@ const PropertyView = () => {
           {/* name */}
           <h1 className="mb-1 text-6xl font-bold">
             {/* {currentProperty?.Name} */}
-            Carbon Capture Fields
+            {data?.name}
           </h1>
           {/* description container */}
           <div className="flex flex-col items-">
             {/* left container */}
             <p className="mt-2 mb-4 text-lg leading-tight text-black">
               {/* {currentProperty.description} */}
-              Carbon Capture Fields is a visionary land project designed for
-              environmental sustainability. Situated on the outskirts of Pune,
-              Maharashtra, this site is earmarked for innovative carbon capture
-              and reforestation initiatives. With its strategic location near
-              major highways and scenic surroundings, it offers a unique
-              opportunity to contribute to the fight against climate change while
-              tapping into the region's growing eco-development potential.
+              {data?.description}
             </p>
             {/* divider */}
             <div className="px-0 mx-0 divider divider-horizontal"></div>
@@ -99,10 +124,10 @@ const PropertyView = () => {
                   <p className="text-black text-md">Date</p>
                   <p className="font-bold text-black text-md">
                     {/* convert currentProperty.created_at to human readable format*/}
-                    {/* {new Date(
-                          currentProperty.created_at
-                        ).toLocaleDateString()} */}
-                    9/18/24
+                    {data?.created_at ? new Date(
+                          data.created_at
+                        ).toLocaleDateString() : ''}
+                    {/* 9/18/24 */}
                   </p>
                 </div>
               </div>
@@ -115,7 +140,7 @@ const PropertyView = () => {
               100
             }
             // currentPrice={currentProperty.priceData[0].Price}
-            currentPrice={124}
+            currentPrice={data?.price ?? 0}
           />
           {/* value parameters */}
           <div className="flex flex-row items-center gap-x-2">
@@ -165,7 +190,7 @@ const PropertyView = () => {
           <div className="mb-6 bg-gray-100 rounded-xl h-[30rem]">
             <Mapbox
               location={[18.5204, 73.8567]} // Latitude and Longitude for Pune, Maharashtra
-              name="Pune, Maharashtra" // You can change this to any other name you want to display
+              name={data?.location ?? ""} // You can change this to any other name you want to display
             />
           </div>
           {/* documents */}
@@ -257,7 +282,7 @@ const PropertyView = () => {
                     <p className="text-black ">
                       {/* {currentProperty.Status.charAt(0).toUpperCase() +
                 currentProperty.Status.slice(1)} */}
-                      Launchpad
+                      {data?.status}
                     </p>
                   </div>
                 </div>
@@ -311,7 +336,8 @@ const PropertyView = () => {
                   {/* {currentProperty.JSONData.attributes.sharePerNFT.toFixed(
             4
           )} */}
-                  0.0159%
+                  {data?.attributes?.sharePerNFT}%
+                  {/* 0.0159% */}
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center">
@@ -320,14 +346,15 @@ const PropertyView = () => {
                   {/* {currentProperty.JSONData.attributes
             .initialPropertyValue /
             currentProperty.JSONData.attributes.initialSharePrice} */}
-                  6300
+                  {/* 6300 */}
+                  {data?.attributes?.initialPropertyValue }
                 </p>
               </div>
               <div className="flex flex-col center items-center justify-center">
                 <p className="text-black text-md">Initial Price</p>
                 <p className="text-2xl font-bold">
                   {/* ${currentProperty.JSONData.attributes.initialSharePrice} */}
-                  $100
+                  ${data?.attributes?.initialSharePrice}
                 </p>
               </div>
             </div>
@@ -455,14 +482,6 @@ const PropertyView = () => {
                 <p>Login to Invest</p>
               </button>
             </>}
-            {/* <button
-              className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
-              onClick={() => {
-                // handleBuy();
-              }}
-            >
-              Invest Now with USDC
-            </button> */}
           </div>
         </div>
       </div>
