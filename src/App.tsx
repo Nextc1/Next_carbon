@@ -25,7 +25,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard>
           <AllProducts />
         </Dashboard>} />
-        <Route path="/property/view" element={<PropertyView/>}/>
+        <Route path="/property/view/:id" element={<PropertyView/>}/>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route
