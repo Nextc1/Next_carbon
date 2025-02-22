@@ -27,8 +27,6 @@ function Navbar() {
         navigate(path);
         setMenuOpen(false); // Close menu on selection
     };
-
-    console.log("userDeatils", user)
     return (
         <nav className="relative min-w-full flex items-center flex-col">
             {/* Left container: Logo */}
@@ -40,7 +38,6 @@ function Navbar() {
                     <Button size={"icon"}
                         className="swap-rotate "
                         onClick={() => {
-                            console.log("Menu clicked", menuOpen);
                             setMenuOpen(!menuOpen);
                         }}
                     >
