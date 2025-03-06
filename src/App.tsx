@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import AllProducts from "./components/custom/dashboard/pages/AllProducts";
 import AuthMiddleware from "./components/custom/auth/AuthMiddleware";
 import PropertyView from "./pages/PropertyView";
+import CreditPurchasePage from "./components/custom/offset/page";
 
 function App() {
   // const { isLoading } = useLoadingStore();
@@ -25,19 +26,27 @@ function App() {
         <Route path="/dashboard" element={<Dashboard>
           <AllProducts />
         </Dashboard>} />
-        <Route path="/property/view/:id" element={<PropertyView/>}/>
+        <Route path="/property/view/:id" element={<PropertyView />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route
-                path="/test"
-                element={
-                  <AuthMiddleware>
-                    <Dashboard>
-                      <div className="p-10">Protected Page</div>
-                    </Dashboard>
-                  </AuthMiddleware>
-                }
-              />
+        <Route path="/test"
+          element={
+            <AuthMiddleware>
+              <Dashboard>
+                <div className="p-10">Protected Page</div>
+              </Dashboard>
+            </AuthMiddleware>
+          }
+        />
+        <Route path="/offset"
+          element={
+            <AuthMiddleware>
+              <Dashboard>
+                <CreditPurchasePage />
+              </Dashboard>
+            </AuthMiddleware>
+          }
+        />
       </Routes>
       <Toaster />
     </div>
