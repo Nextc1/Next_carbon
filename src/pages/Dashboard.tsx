@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Sidebar from "@/components/custom/Sidebar"
 // import { useAuth } from "@/hooks/AuthContext"
@@ -6,7 +5,7 @@ import { useState } from "react"
 
 export const Dashboard = ({ children }: any) => {
   // const { handleLogout } = useAuth()
-  const [isSideBarOpen, setIsSideBarOpen] = useState<boolean>(true)
+  const [isSideBarOpen] = useState<boolean>(true)
 
   return (
     <div className="flex h-screen border-t">
