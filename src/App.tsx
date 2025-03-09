@@ -1,6 +1,6 @@
-import { Route, Routes, useLocation } from "react-router-dom"
-import Home from "./pages/Home"
-import TopBanner from "./components/custom/TopBanner"
+import { Route, Routes, useLocation } from "react-router-dom";
+import Home from "./pages/Home";
+import TopBanner from "./components/custom/TopBanner";
 // import { useLoadingStore } from "./state-management/store";
 // import LoadingOverlay from "./components/custom/LoadingOverlay";
 import { Toaster } from "./components/ui/toaster";
@@ -23,13 +23,19 @@ function App() {
       {!isDashboardPage && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard>
-          <AllProducts />
-        </Dashboard>} />
+        <Route
+          path="/dashboard"
+          element={
+            <Dashboard>
+              <AllProducts />
+            </Dashboard>
+          }
+        />
         <Route path="/property/view/:id" element={<PropertyView />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/test"
+        <Route
+          path="/test"
           element={
             <AuthMiddleware>
               <Dashboard>
@@ -38,7 +44,8 @@ function App() {
             </AuthMiddleware>
           }
         />
-        <Route path="/offset"
+        <Route
+          path="/offset"
           element={
             <AuthMiddleware>
               <Dashboard>
@@ -50,7 +57,7 @@ function App() {
       </Routes>
       <Toaster />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
