@@ -143,7 +143,7 @@ export default function CreditPurchasePage() {
         <div className="container mx-auto py-10 max-w-[90%]">
             <Card className="mb-8 w-full">
                 <CardHeader>
-                    <CardTitle>Purchase Credits</CardTitle>
+                    <CardTitle>Retire Credits</CardTitle>
                     <CardDescription>Select a project and specify the number of credits you want to purchase.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -171,7 +171,7 @@ export default function CreditPurchasePage() {
                                                 </SelectContent>
                                             </Select>
                                             <FormDescription className="text-xs">
-                                                Select the project you want to purchase credits for.
+                                                Select the project you want to Retire credits for.
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>
