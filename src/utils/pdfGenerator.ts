@@ -71,7 +71,7 @@ export const generateRetirementCertificate = async (data: RetirementCertificate)
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
-    doc.text(`Pentonics`, 22, 102);
+    doc.text(`Zomato`, 22, 102);
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
