@@ -76,6 +76,7 @@ const formSchema = z.object({
 export default function CreditPurchasePage() {
     const [purchases, setPurchases] = useState<Purchase[]>([]);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // @ts-ignore
     const [txHash, setTxHash] = useState<string | null>(null);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
