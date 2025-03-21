@@ -3,25 +3,24 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 interface Property {
+  name: string;
   id: number;
+  type: string;
+  price: number;
+  status: string;
+  available_shares: number;
   propertyName: string;
   location: string;
-  country: string;
-  propertyType: string;
-  ticketPrice: string;
-  currentPrice: string;
-  totalShares: string;
-  yourShares?: number;
-  originalTicketPrice: string;
-  latitude: number;
-  longitude: number;
+  yourShares: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface MapboxProps {
-  dummyData: Property[];
+  properties: Property[];
 }
 
-const Mapbox: React.FC<MapboxProps> = ({ dummyData }) => {
+const Mapbox: React.FC<MapboxProps> = ({ properties }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [spinEnabled] = useState(true);
@@ -33,17 +32,19 @@ const Mapbox: React.FC<MapboxProps> = ({ dummyData }) => {
     mapboxgl.accessToken =
       "pk.eyJ1IjoibWFudWFyZXJhYSIsImEiOiJjbHVua3JhcHAxNjRkMmpwN2p1a2VwcTZlIn0.M7SLaBn_r3ldw0KuawrZbA";
 
-    mapRef.current = new mapboxgl.Map({
+    const map = new mapboxgl.Map({
       container: mapContainerRef.current!,
       style: "mapbox://styles/mapbox/light-v11",
       center: [-74.5, 40], // Default center position
-      zoom: 1, // Default zoom
+      zoom: 1,
       maxZoom: 15,
       projection: "globe",
     });
 
-    dummyData.forEach((property) => {
-      const { latitude, longitude, propertyName, yourShares } = property;
+    mapRef.current = map;
+
+    properties.forEach((property) => {
+      const { latitude, longitude,  propertyName, yourShares } = property;
 
       if (!latitude || !longitude) {
         console.error(`Invalid coordinates for ${propertyName}`);
@@ -58,15 +59,13 @@ const Mapbox: React.FC<MapboxProps> = ({ dummyData }) => {
           ${yourShares ? `<br /><span>${yourShares} shares</span>` : ""}
         </div>
       `;
-
-      new mapboxgl.Marker(el)
-        .setLngLat([longitude, latitude])
-        .addTo(mapRef.current!);
+      new mapboxgl.Marker(el).setLngLat([longitude, latitude]).addTo(map);
+     
     });
 
     const spinGlobe = () => {
-      if (!mapRef.current || !spinEnabled || userInteracting) return;
-      const zoom = mapRef.current.getZoom();
+      if (!map || !spinEnabled || userInteracting) return;
+      const zoom = map.getZoom();
       const maxSpinZoom = 5;
       const slowSpinZoom = 3;
       let distancePerSecond = 360 / 60;
@@ -76,11 +75,11 @@ const Mapbox: React.FC<MapboxProps> = ({ dummyData }) => {
         distancePerSecond *= zoomDif;
       }
 
-      const center = mapRef.current.getCenter();
+      const center = map.getCenter();
       center.lng -= distancePerSecond;
-      mapRef.current.easeTo({ center, duration: 1000, easing: (n) => n });
+      map.easeTo({ center, duration: 1000, easing: (n) => n });
 
-      mapRef.current.once("moveend", spinGlobe);
+      map.once("moveend", spinGlobe);
     };
 
     const stopSpinOnInteraction = () => {
@@ -92,18 +91,18 @@ const Mapbox: React.FC<MapboxProps> = ({ dummyData }) => {
       spinGlobe();
     };
 
-    mapRef.current.on("mousedown", stopSpinOnInteraction);
-    mapRef.current.on("mouseup", resumeSpinAfterInteraction);
-    mapRef.current.on("dragend", resumeSpinAfterInteraction);
-    mapRef.current.on("pitchend", resumeSpinAfterInteraction);
-    mapRef.current.on("rotateend", resumeSpinAfterInteraction);
+    map.on("mousedown", stopSpinOnInteraction);
+    map.on("mouseup", resumeSpinAfterInteraction);
+    map.on("dragend", resumeSpinAfterInteraction);
+    map.on("pitchend", resumeSpinAfterInteraction);
+    map.on("rotateend", resumeSpinAfterInteraction);
 
     spinGlobe();
 
     return () => {
-      mapRef.current?.remove();
+      map.remove();
     };
-  }, [dummyData, spinEnabled]);
+  }, [properties, spinEnabled]);
 
   return <div ref={mapContainerRef} className="map-container w-full h-full rounded-xl" />;
 };

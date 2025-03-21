@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -18,27 +18,12 @@ import {
 import { SearchIcon } from "../icons/SearchIcon";
 import { ChevronDownIcon } from "../icons/ChevronDownIcon";
 
-interface Property {
-  id: number;
-  propertyName: string;
-  location: string;
-  propertyType: string;
-  ticketPrice: string;
-  currentPrice: string;
-  totalShares: string;
-  yourShares?: number;
-}
-
-interface YourPropertiesTableProps {
-  dummyData: Property[];
-}
-
-const propertyTypes = [
-  { uid: "residential", name: "Residential" },
-  { uid: "commercial", name: "Commercial" },
-  { uid: "industrial", name: "Industrial" },
-  { uid: "emptyPlot", name: "Empty Plot" },
-];
+// const propertyTypes = [
+//   { uid: "residential", name: "Residential" },
+//   { uid: "commercial", name: "Commercial" },
+//   { uid: "industrial", name: "Industrial" },
+//   { uid: "emptyPlot", name: "Empty Plot" },
+// ];
 
 const columns = [
   { uid: "propertyName", name: "Project Name" },
@@ -49,22 +34,40 @@ const columns = [
   { uid: "totalShares", name: "Total Shares" },
   { uid: "actions", name: "Actions" },
 ];
+interface Property {
+  id: number;
+  name: string;
+  type: string;
+  price: number;
+  status: string;
+  available_shares: number;
+  propertyName: string;
+  location: string;
+  yourShares: number;
+  latitude?: number;
+  longitude?: number;
+}
 
-export default function YourPropertiesTable({ dummyData }: YourPropertiesTableProps) {
-  const [portfolioProps] = useState<Property[]>(dummyData);
+interface YourPropertiesTableProps {
+  properties: Property[];
+}
+
+export default function YourPropertiesTable({ properties }: YourPropertiesTableProps) {
+  const [portfolioProps, setPortfolioProps] = useState<Property[]>(properties);
   const [filterValue, setFilterValue] = useState("");
-  const [propertyTypeFilter, setPropertyTypeFilter] = useState<Selection>(
-    new Set(["all"])
-  );
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState<Selection>(new Set(["all"]));
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "propertyName",
     direction: "ascending",
   });
 
-  // Filter and search logic
+  useEffect(() => {
+    setPortfolioProps(properties);
+    console.log("Properties", properties);
+  }, [properties]);
+
   const filteredItems = useMemo(() => {
     let filtered = portfolioProps;
-
     if (filterValue) {
       filtered = filtered.filter((item) =>
         item.propertyName.toLowerCase().includes(filterValue.toLowerCase())
@@ -73,15 +76,12 @@ export default function YourPropertiesTable({ dummyData }: YourPropertiesTablePr
 
     const propertyTypeSet = new Set(propertyTypeFilter);
     if (!propertyTypeSet.has("all")) {
-      filtered = filtered.filter((item) =>
-        propertyTypeSet.has(item.propertyType.toLowerCase())
-      );
+      filtered = filtered.filter((item) => propertyTypeSet.has(item.type.toLowerCase()));
     }
 
     return filtered;
   }, [filterValue, propertyTypeFilter, portfolioProps]);
 
-  // Sorting logic
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
       let cmp = 0;
@@ -93,26 +93,24 @@ export default function YourPropertiesTable({ dummyData }: YourPropertiesTablePr
           cmp = a.location.localeCompare(b.location);
           break;
         case "propertyType":
-          cmp = a.propertyType.localeCompare(b.propertyType);
+          cmp = a.type.localeCompare(b.type);
           break;
         case "ticketPrice":
-          cmp = parseFloat(a.ticketPrice.replace("$", "")) - parseFloat(b.ticketPrice.replace("$", ""));
+          cmp = a.price - b.price;
           break;
         case "currentPrice":
-          cmp = a.currentPrice.localeCompare(b.currentPrice);
+          cmp = a.price - b.price;
           break;
         case "totalShares":
-          cmp = parseInt(a.totalShares.split(" / ")[0]) - parseInt(b.totalShares.split(" / ")[0]);
+          cmp = a.available_shares - b.available_shares;
           break;
         default:
           cmp = 0;
       }
-
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, filteredItems]);
 
-  // Cell rendering logic
   const renderCell = useCallback((item: Property, columnKey: React.Key) => {
     switch (columnKey) {
       case "propertyName":
@@ -120,13 +118,13 @@ export default function YourPropertiesTable({ dummyData }: YourPropertiesTablePr
       case "location":
         return item.location;
       case "propertyType":
-        return item.propertyType;
+        return item.type;
       case "ticketPrice":
-        return item.ticketPrice;
+        return item.price;
       case "currentPrice":
-        return item.currentPrice;
+        return item.price;
       case "totalShares":
-        return item.totalShares;
+        return item.available_shares;
       case "actions":
         return (
           <button className="px-4 py-2 font-bold text-white bg-black border-2 border-black rounded-full hover:bg-white hover:text-black">
@@ -155,47 +153,41 @@ export default function YourPropertiesTable({ dummyData }: YourPropertiesTablePr
             closeOnSelect={false}
           >
             <DropdownItem key="all">All Types</DropdownItem>
-            <>
-              {propertyTypes.map((type) => (
-                <DropdownItem key={type.uid}>{type.name}</DropdownItem>
-              ))}
-            </>
+            <DropdownItem key="residential">Residential</DropdownItem>
+            <DropdownItem key="commercial">Commercial</DropdownItem>
+            <DropdownItem key="industrial">Industrial</DropdownItem>
+            <DropdownItem key="emptyPlot">Empty Plot</DropdownItem>
           </DropdownMenu>
         </Dropdown>
 
         <Input
           className="w-full max-w-lg text-xl"
           placeholder="Search for a project by name..."
-          startContent={<SearchIcon className=" mr-2"/>}
+          startContent={<SearchIcon className="mr-2" />}
           value={filterValue}
           onValueChange={setFilterValue}
           size="lg"
         />
       </div>
 
-      <Table
-        aria-label="User-owned property table"
-        sortDescriptor={sortDescriptor}
-        onSortChange={setSortDescriptor}
-      >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              allowsSorting
-              align={column.uid === "actions" ? "center" : "start"}
-              className="text-black text-md"
-            >
+      <Table aria-label="User-owned property table " className="mb-4" sortDescriptor={sortDescriptor} onSortChange={setSortDescriptor}>
+        <TableHeader>
+          {columns.map((column) => (
+            <TableColumn key={column.uid} allowsSorting className="text-black text-md">
               {column.name}
             </TableColumn>
-          )}
+          ))}
         </TableHeader>
-        <TableBody items={sortedItems}>
-          {(item) => (
-            <TableRow key={item.id} className="pb-2 my-6">
-              {(columnKey) => <TableCell className="text-md">{renderCell(item, columnKey)}</TableCell>}
+        <TableBody>
+          {sortedItems.map((item, index) => (
+            <TableRow key={index}>
+              {columns.map((column) => (
+                <TableCell key={column.uid} className="text-md">
+                  {renderCell(item, column.uid)}
+                </TableCell>
+              ))}
             </TableRow>
-          )}
+          ))}
         </TableBody>
       </Table>
     </div>
