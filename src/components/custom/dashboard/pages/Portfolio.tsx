@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Mapbox from "../sub-components/Mapbox";
 import YourPropertiesTable from "../sub-components/YourPropertiesTable";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/AuthContext";
 
 interface Property {
   name: string;
@@ -28,7 +29,8 @@ function Portfolio() {
     totalSharesHeld: 0,
   });
 
-  const user = "74844fdf-6da8-4844-9c93-1775941c1e8f";
+  const tempUser = useAuth();
+  const user = tempUser.user?.id;
 
   useEffect(() => {
     const fetchUserProjects = async () => {
