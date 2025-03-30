@@ -163,13 +163,8 @@ export default function CreditPurchasePage() {
 
     // Form submission handler
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
-        if (!currentUserId) {
-            toast.error('Please login first');
-            return;
-        }
-
-        if (!selectedProject) {
-            toast.error('Please select a project');
+        if (!currentUserId || !selectedProject) {
+            toast.error('Please login and select a project');
             return;
         }
 
@@ -180,15 +175,61 @@ export default function CreditPurchasePage() {
 
         setLoading(true);
         try {
-            // Execute blockchain transaction first
-            const hash = await offsetAgainstProject(
-                values.credits,
-                "0x74C744D91650Ce734B3D8b00eCC98d8B8043edE3",
-                values.address,
-                selectedProject.name || ''
-            );
+            // Start a Supabase transaction to update/delete from owners first
+            const remainingCredits = selectedProject.credits - values.credits;
+            
+            if (remainingCredits === 0) {
+                // Delete the record if no credits remain
+                const { error: deleteError } = await supabase
+                    .from('owners')
+                    .delete()
+                    .eq('id', selectedProject.id)
+                    .eq('credits', selectedProject.credits); // Additional check to ensure credits haven't changed
 
-            // After getting hash, insert into offset table
+                if (deleteError) throw deleteError;
+            } else {
+                // Update the remaining credits with optimistic locking
+                const { error: updateOwnerError } = await supabase
+                    .from('owners')
+                    .update({ credits: remainingCredits })
+                    .eq('id', selectedProject.id)
+                    .eq('credits', selectedProject.credits); // Additional check to ensure credits haven't changed
+
+                if (updateOwnerError) throw updateOwnerError;
+            }
+
+            // Now execute blockchain transaction
+            let hash: string;
+            try {
+                hash = await offsetAgainstProject(
+                    values.credits,
+                    "0x74C744D91650Ce734B3D8b00eCC98d8B8043edE3",
+                    values.address,
+                    selectedProject.name || ''
+                );
+            } catch (blockchainError) {
+                // If blockchain transaction fails, revert the database changes
+                if (remainingCredits === 0) {
+                    // Restore the deleted record
+                    await supabase
+                        .from('owners')
+                        .insert({
+                            id: selectedProject.id,
+                            user_id: currentUserId,
+                            property_id: selectedProject.property_id,
+                            credits: selectedProject.credits
+                        });
+                } else {
+                    // Restore the original credits
+                    await supabase
+                        .from('owners')
+                        .update({ credits: selectedProject.credits })
+                        .eq('id', selectedProject.id);
+                }
+                throw blockchainError;
+            }
+
+            // After successful blockchain transaction, record in offset table
             const { data: offsetData, error: offsetError } = await supabase
                 .from('offset')
                 .insert({
@@ -203,34 +244,24 @@ export default function CreditPurchasePage() {
                 .select()
                 .single();
 
-            if (offsetError) throw offsetError;
+            if (offsetError) {
+                // If offset record fails, we should log this for admin attention
+                // but we can't revert the blockchain transaction
+                console.error('Failed to record offset, but blockchain transaction succeeded:', hash);
+                throw offsetError;
+            }
 
-            // Add the new purchase to the state
+            // Update local state and generate certificate only after everything succeeds
             if (offsetData) {
                 setPurchases(prev => [offsetData, ...prev]);
             }
 
-            // Update or delete the owner record
-            const remainingCredits = selectedProject.credits - values.credits;
-            if (remainingCredits === 0) {
-                // Delete the record if no credits remain
-                const { error: deleteError } = await supabase
-                    .from('owners')
-                    .delete()
-                    .eq('id', selectedProject.id);
+            setProjects(projects.map(p => 
+                p.id === selectedProject.id 
+                    ? { ...p, credits: remainingCredits }
+                    : p
+            ).filter(p => p.credits > 0));
 
-                if (deleteError) throw deleteError;
-            } else {
-                // Update the remaining credits
-                const { error: updateOwnerError } = await supabase
-                    .from('owners')
-                    .update({ credits: remainingCredits })
-                    .eq('id', selectedProject.id);
-
-                if (updateOwnerError) throw updateOwnerError;
-            }
-
-            // Generate certificate
             generateRetirementCertificate({
                 retiredOn: format(new Date(), "dd MMM yyyy"),
                 tonnes: values.credits.toString(),
@@ -240,18 +271,11 @@ export default function CreditPurchasePage() {
                 description: values.description
             });
 
-            // Update local state
-            setProjects(projects.map(p => 
-                p.id === selectedProject.id 
-                    ? { ...p, credits: remainingCredits }
-                    : p
-            ).filter(p => p.credits > 0));
-
             form.reset();
-            toast.success('Purchase Successful');
+            toast.success('Credits retired successfully');
         } catch (error) {
             console.error('Transaction failed:', error);
-            toast.error('Transaction failed');
+            toast.error('Transaction failed. Please contact support if you see inconsistent state.');
         } finally {
             setLoading(false);
         }
