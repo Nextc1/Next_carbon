@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,52 +14,29 @@ import { toast } from "sonner";
 import { offsetAgainstProject } from "@/utils/ethersUtils";
 import { generateRetirementCertificate } from "@/utils/pdfGenerator";
 import { format } from "date-fns";
+import { supabase } from "@/lib/supabase";
 
-// Define the project type
+// Update Project interface to match the database structure
 interface Project {
-    id: string;
-    name: string;
-    availableCredits: number;
+    id: number;
+    created_at: string;
+    user_id: string;
+    property_id: string;
+    credits: number;
+    name?: string; // This will store the project name from property_data
 }
 
-// Sample projects data
-const projects: Project[] = [
-    {
-        id: "1",
-        name: "4×50 MW Dayingjiang-3 Hydropower Project",
-        availableCredits: 1000
-    },
-    {
-        id: "2",
-        name: "Sichuan Province Biogas Development Programme",
-        availableCredits: 500
-    },
-    {
-        id: "3",
-        name: "100 MW Wind Power Project in Karnataka",
-        availableCredits: 750
-    },
-    {
-        id: "4",
-        name: "Forest Conservation Project in Amazon",
-        availableCredits: 1200
-    },
-    {
-        id: "5",
-        name: "Solar Power Plant in Rajasthan Desert",
-        availableCredits: 900
-    }
-];
-
-// Define the purchase type
+// Update Purchase interface to match the offset table structure
 interface Purchase {
-    projectId: string;
-    projectName: string;
+    id: string;
+    user_id: string;
+    property_id: string;
     credits: number;
     description: string;
-    address: string;
-    trxHash: string;
-    date: Date;
+    transaction_hash: string;
+    beneficiary_address: string;
+    beneficiary_name: string;
+    created_at: Date;
 }
 
 // Form schema
@@ -71,71 +48,212 @@ const formSchema = z.object({
     }).positive("Credits must be positive."),
     description: z.string().min(5, "Description must be at least 5 characters."),
     address: z.string().min(42, "Address is not valid.").max(42, "Address is not valid."),
+    beneficiaryName: z.string().min(1, "Beneficiary name is required"),
 });
 
 export default function CreditPurchasePage() {
+    const [projects, setProjects] = useState<Project[]>([]);
     const [purchases, setPurchases] = useState<Purchase[]>([]);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // @ts-ignore
-    const [txHash, setTxHash] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: { description: "" },
     });
-    const [loading, setLoading] = useState(false);
+
+    // Fetch current user
+    useEffect(() => {
+        const getCurrentUser = async () => {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) {
+                    console.error('Error fetching user:', error.message);
+                    return;
+                }
+                
+                if (user) {
+                    setCurrentUserId(user.id);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
+
+        getCurrentUser();
+    }, []);
+
+    // Fetch projects with property names
+    useEffect(() => {
+        const fetchProjects = async () => {
+            if (!currentUserId) return;
+
+            setLoading(true);
+            try {
+                const { data: projectsData, error: projectsError } = await supabase
+                    .from('owners')
+                    .select('*')
+                    .eq('user_id', currentUserId);
+
+                if (projectsError) throw projectsError;
+
+                // Fetch property names for each project
+                const projectsWithNames = await Promise.all(
+                    projectsData.map(async (project) => {
+                        const { data: propertyData, error: propertyError } = await supabase
+                            .from('property_data')
+                            .select('name')
+                            .eq('id', project.property_id)
+                            .single();
+
+                        if (propertyError) throw propertyError;
+
+                        return {
+                            ...project,
+                            name: propertyData.name
+                        };
+                    })
+                );
+
+                setProjects(projectsWithNames);
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+                toast.error('Failed to fetch projects');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProjects();
+    }, [currentUserId]);
+
+    // Add this effect to fetch purchases
+    useEffect(() => {
+        const fetchPurchases = async () => {
+            if (!currentUserId) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('offset')
+                    .select('*')
+                    .eq('user_id', currentUserId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                if (data) {
+                    setPurchases(data);
+                }
+            } catch (error) {
+                console.error('Error fetching purchases:', error);
+                toast.error('Failed to fetch purchases');
+            }
+        };
+
+        fetchPurchases();
+    }, [currentUserId]);
 
     const selectedProjectId = form.watch("projectId");
-    const selectedProject = projects.find((p) => p.id === selectedProjectId);
+    const selectedProject = projects.find((p) => p.id.toString() === selectedProjectId);
 
     const validateCredits = (value: number) => {
         if (!selectedProject) return true;
-        return value <= selectedProject.availableCredits || `Credits must be less than or equal to ${selectedProject.availableCredits}`;
+        return value <= selectedProject.credits || `Credits must be less than or equal to ${selectedProject.credits}`;
     };
 
     // Form submission handler
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
-        const today = format(new Date(), "dd MMM yyyy").toString();
+        if (!currentUserId) {
+            toast.error('Please login first');
+            return;
+        }
+
         if (!selectedProject) {
-            toast("Please select a project.");
+            toast.error('Please select a project');
             return;
         }
 
-        if (values.credits > selectedProject.availableCredits) {
-            toast("Insufficient credits available.");
+        if (values.credits > selectedProject.credits) {
+            toast.error('Insufficient credits available');
             return;
         }
 
+        setLoading(true);
         try {
-            console.log("Statred contractFun")
-            setLoading(true);
-            const hash = await offsetAgainstProject(values.credits, "0x74C744D91650Ce734B3D8b00eCC98d8B8043edE3", values.address, selectedProject.name);
-            setTxHash(hash);
-            console.log("hash", hash)
-            const purchase: Purchase = {
-                projectId: values.projectId,
-                projectName: selectedProject.name,
-                credits: values.credits,
-                address: values.address,
-                description: values.description,
-                trxHash: hash,
-                date: new Date(),
-            };
+            // Execute blockchain transaction first
+            const hash = await offsetAgainstProject(
+                values.credits,
+                "0x74C744D91650Ce734B3D8b00eCC98d8B8043edE3",
+                values.address,
+                selectedProject.name || ''
+            );
 
-            setPurchases([purchase, ...purchases]);
-            // generatePDF(purchase);
+            // After getting hash, insert into offset table
+            const { data: offsetData, error: offsetError } = await supabase
+                .from('offset')
+                .insert({
+                    user_id: currentUserId,
+                    property_id: selectedProject.property_id,
+                    credits: values.credits,
+                    description: values.description,
+                    beneficiary_address: values.address,
+                    beneficiary_name: values.beneficiaryName,
+                    transaction_hash: hash,
+                })
+                .select()
+                .single();
+
+            if (offsetError) throw offsetError;
+
+            // Add the new purchase to the state
+            if (offsetData) {
+                setPurchases(prev => [offsetData, ...prev]);
+            }
+
+            // Update or delete the owner record
+            const remainingCredits = selectedProject.credits - values.credits;
+            if (remainingCredits === 0) {
+                // Delete the record if no credits remain
+                const { error: deleteError } = await supabase
+                    .from('owners')
+                    .delete()
+                    .eq('id', selectedProject.id);
+
+                if (deleteError) throw deleteError;
+            } else {
+                // Update the remaining credits
+                const { error: updateOwnerError } = await supabase
+                    .from('owners')
+                    .update({ credits: remainingCredits })
+                    .eq('id', selectedProject.id);
+
+                if (updateOwnerError) throw updateOwnerError;
+            }
+
+            // Generate certificate
             generateRetirementCertificate({
-                retiredOn: today,
-                tonnes: (values.credits / 1).toString(),
+                retiredOn: format(new Date(), "dd MMM yyyy"),
+                tonnes: values.credits.toString(),
                 beneficiaryAddress: values.address,
-                project: selectedProject.name,
+                project: selectedProject.name || '',
                 transactionHash: hash,
                 description: values.description
-            })
+            });
+
+            // Update local state
+            setProjects(projects.map(p => 
+                p.id === selectedProject.id 
+                    ? { ...p, credits: remainingCredits }
+                    : p
+            ).filter(p => p.credits > 0));
+
             form.reset();
+            toast.success('Purchase Successful');
+        } catch (error) {
+            console.error('Transaction failed:', error);
+            toast.error('Transaction failed');
+        } finally {
             setLoading(false);
-            toast("Purchase Successful");
-        } catch {
-            toast("Transaction failed");
         }
     };
 
@@ -164,8 +282,8 @@ export default function CreditPurchasePage() {
                                                 </FormControl>
                                                 <SelectContent>
                                                     {projects.map((project) => (
-                                                        <SelectItem key={project.id} value={project.id}>
-                                                            {project.name} ({project.availableCredits} credits available)
+                                                        <SelectItem key={project.id} value={project.id.toString()}>
+                                                            {project.name} ({project.credits} credits available)
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -192,7 +310,7 @@ export default function CreditPurchasePage() {
                                             </FormControl>
                                             <FormDescription className="text-xs">
                                                 {selectedProject
-                                                    ? `Enter a number less than or equal to ${selectedProject.availableCredits}.`
+                                                    ? `Enter a number less than or equal to ${selectedProject.credits}.`
                                                     : "Select a project first."}
                                             </FormDescription>
                                             <FormMessage />
@@ -231,22 +349,36 @@ export default function CreditPurchasePage() {
                                 )}
                             />
 
+                            <FormField
+                                control={form.control}
+                                name="beneficiaryName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Beneficiary Name</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} />
+                                        </FormControl>
+                                        <FormDescription className="text-xs">
+                                            Enter the name of the beneficiary
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
                             <Button type="submit" className={`w-full ${loading ? "bg-primary/70" : "bg-primary"}`} disabled={loading}>
-                                Purchase Credits
+                                Retire Credits
                             </Button>
                         </form>
                     </Form>
                 </CardContent>
             </Card>
-            {/* <Button type="submit" onClick={handleGenerate} className="w-full bg-primary">
-                Purchase Credits
-            </Button> */}
 
             {purchases.length > 0 && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Recent Purchases</CardTitle>
-                        <CardDescription>Your recent credit purchases are listed below.</CardDescription>
+                        <CardTitle>Retired Credits</CardTitle>
+                        <CardDescription>Your recent credit retirements are listed below.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
@@ -254,18 +386,18 @@ export default function CreditPurchasePage() {
                                 <div key={index} className="border rounded-lg p-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                         <div className="font-medium">Project:</div>
-                                        <div className="break-words">{purchase.projectName}</div>
+                                        <div className="break-words">{purchase.beneficiary_name}</div>
 
                                         <div className="font-medium">Credits:</div>
                                         <div className="break-words">{purchase.credits}</div>
 
                                         <div className="font-medium">Address:</div>
-                                        <div className="break-words">{purchase.address}</div>
+                                        <div className="break-words">{purchase.beneficiary_address}</div>
 
                                         <div className="font-medium">Transaction Hash:</div>
                                         <div className="break-words hover:text-blue-500">
-                                            <a href={`https://amoy.polygonscan.com/tx/${purchase.trxHash}`} target="_blank" rel="noopener noreferrer">
-                                                {purchase.trxHash}
+                                            <a href={`https://amoy.polygonscan.com/tx/${purchase.transaction_hash}`} target="_blank" rel="noopener noreferrer">
+                                                {purchase.transaction_hash}
                                             </a>
                                         </div>
 
@@ -273,14 +405,14 @@ export default function CreditPurchasePage() {
                                         <div className="break-words">{purchase.description}</div>
 
                                         <div className="font-medium">Date:</div>
-                                        <div className="break-words">{purchase.date.toLocaleString()}</div>
+                                        <div className="break-words">{purchase.created_at.toLocaleString()}</div>
                                     </div>
                                     <Button variant="outline" size="sm" className="mt-2" onClick={() => generateRetirementCertificate({
-                                        retiredOn: format(purchase.date, "dd MMM yyyy").toString(),
+                                        retiredOn: format(purchase.created_at, "dd MMM yyyy").toString(),
                                         tonnes: (purchase.credits / 1).toString(),
-                                        beneficiaryAddress: purchase.address,
-                                        project: purchase.projectName,
-                                        transactionHash: purchase.trxHash,
+                                        beneficiaryAddress: purchase.beneficiary_address,
+                                        project: purchase.beneficiary_name,
+                                        transactionHash: purchase.transaction_hash,
                                         description: purchase.description
                                     })}>
                                         Download Receipt
