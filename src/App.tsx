@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import TopBanner from "./components/custom/TopBanner";
 // import { useLoadingStore } from "./state-management/store";
 // import LoadingOverlay from "./components/custom/LoadingOverlay";
-import { Toaster } from "./components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner"
 import Navbar from "./components/custom/Navbar";
 import { Dashboard } from "./pages/Dashboard";
 import Login from "./pages/Login";
