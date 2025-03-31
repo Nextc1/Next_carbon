@@ -12,6 +12,7 @@ import AllProducts from "./components/custom/dashboard/pages/AllProducts";
 import AuthMiddleware from "./components/custom/auth/AuthMiddleware";
 import PropertyView from "./pages/PropertyView";
 import CreditPurchasePage from "./components/custom/offset/page";
+import Portfolio from "./components/custom/dashboard/pages/Portfolio";
 
 function App() {
   // const { isLoading } = useLoadingStore();
@@ -29,6 +30,16 @@ function App() {
             <Dashboard>
               <AllProducts />
             </Dashboard>
+          }
+        />
+        <Route
+          path="/dashboard/portfolio"
+          element={
+            <AuthMiddleware>
+              <Dashboard>
+                <Portfolio />
+              </Dashboard>
+            </AuthMiddleware>
           }
         />
         <Route path="/property/view/:id" element={<PropertyView />} />
