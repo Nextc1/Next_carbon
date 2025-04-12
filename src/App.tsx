@@ -77,7 +77,7 @@ function App() {
           }
         />
       </Routes>
-      <Toaster />
+      <Toaster richColors/>
     </div>
   );
 }

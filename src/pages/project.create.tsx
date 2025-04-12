@@ -72,7 +72,7 @@ export default function CreatePropertyPage() {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto pb-10 pt-5">
       <Card className="border border-gray-200 bg-white">
         <CardHeader className="border-b border-gray-100">
           <CardTitle className="text-2xl font-bold">Create New Property</CardTitle>
