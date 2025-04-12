@@ -68,7 +68,7 @@ const formSchema = z.object({
       invalid_type_error: "Credits must be a number.",
     })
     .positive("Credits must be positive."),
-  description: z.string().min(5, "Description must be at least 5 characters."),
+  description: z.string().min(5, "Description must be at least 5 characters.").max(100, "Description must be at most 100 characters."),
   address: z
     .string()
     .min(42, "Address is not valid.")
@@ -258,7 +258,7 @@ export default function CreditPurchasePage() {
   };
 
   return (
-    <div className="container mx-auto py-10 max-w-[90%]">
+    <div className="container py-10 px-4 max-w-[90%]">
       <Card className="mb-8 w-full">
         <CardHeader>
           <CardTitle>Retire Credits</CardTitle>
