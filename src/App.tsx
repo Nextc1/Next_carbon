@@ -13,7 +13,7 @@ import AuthMiddleware from "./components/custom/auth/AuthMiddleware";
 import PropertyView from "./pages/PropertyView";
 import Portfolio from "./components/custom/dashboard/pages/Portfolio";
 import CreatePropertyPage from "./pages/project.create";
-import CreditPurchasePage from "./pages/Offset";
+import CreditPurchasePage from "./pages/offset";
 
 function App() {
   // const { isLoading } = useLoadingStore();

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
@@ -542,6 +544,7 @@ export const usePropertiesStore = create(
         }
 
         // fetch JSON data for all properties
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const propertiesWithJSONData = await Promise.all(
           finalResult.map(async (property) => {
             const JSONFile = property.JSONFile;
