@@ -82,6 +82,7 @@ export default function Signup() {
         });
         navigate("/");
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setMessage({ type: "error", text: err.message || "Signup failed." });
     }

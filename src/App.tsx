@@ -11,8 +11,9 @@ import Signup from "./pages/Signup";
 import AllProducts from "./components/custom/dashboard/pages/AllProducts";
 import AuthMiddleware from "./components/custom/auth/AuthMiddleware";
 import PropertyView from "./pages/PropertyView";
-import CreditPurchasePage from "./components/custom/offset/page";
 import Portfolio from "./components/custom/dashboard/pages/Portfolio";
+import CreatePropertyPage from "./pages/project.create";
+import CreditPurchasePage from "./pages/offset";
 
 function App() {
   // const { isLoading } = useLoadingStore();
@@ -65,8 +66,18 @@ function App() {
             </AuthMiddleware>
           }
         />
+        <Route
+          path="/addproperty"
+          element={
+            <AuthMiddleware>
+              <Dashboard>
+                <CreatePropertyPage />
+              </Dashboard>
+            </AuthMiddleware>
+          }
+        />
       </Routes>
-      <Toaster />
+      <Toaster richColors/>
     </div>
   );
 }

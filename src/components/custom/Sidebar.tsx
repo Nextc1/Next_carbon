@@ -7,7 +7,7 @@ import {
   } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Sidebar = ({isOpen}:{isOpen:boolean}) => {
 
@@ -39,7 +39,7 @@ const Sidebar = ({isOpen}:{isOpen:boolean}) => {
       {/* <div className="absolute  top-12 -right-10  p-2 bg-gray-200 rounded-full" onClick={handleMenu}>{isOpen?<ChevronFirst />:<ChevronLast />}</div> */}
       <aside className={`${isOpen?'w-[18rem]':'hidden'} h-full bg-gray-100 border-r border-gray-200`}>
         <div className="p-6">
-          <h1 className="mt-10 lg:mt-6 mb-12 text-center text-4xl font-black">Next Carbon</h1>
+          <Link to={"/"} className="mt-10 lg:mt-6 mb-12 text-center text-4xl text-black font-extrabold hover:!text-black">Next Carbon</Link>
           <div className="space-y-6">
             <div className="flex flex-col items-start w-full">
               <h2 className="font-semibold text-gray-500 text-md mb-">

@@ -68,7 +68,7 @@ const formSchema = z.object({
       invalid_type_error: "Credits must be a number.",
     })
     .positive("Credits must be positive."),
-  description: z.string().min(5, "Description must be at least 5 characters."),
+  description: z.string().min(5, "Description must be at least 5 characters.").max(100, "Description must be at most 100 characters."),
   address: z
     .string()
     .min(42, "Address is not valid.")
@@ -145,8 +145,8 @@ export default function CreditPurchasePage() {
 
         setProjects(projectsWithNames);
       } catch (error) {
-        console.error("Error fetching projects:", error);
         toast.error("Failed to fetch projects");
+        throw new Error(`Failed to fetch projects: ${error}`);
       } finally {
         setLoading(false);
       }
@@ -208,6 +208,9 @@ export default function CreditPurchasePage() {
 
     setLoading(true);
     try {
+      toast.loading("Retiring credits...",{
+        id: "retire-credits",
+      });
       const { data } = await axios.post(
         "https://api.nextcarbon.in/api/offset",
         {
@@ -221,11 +224,15 @@ export default function CreditPurchasePage() {
       );
 
       if (!data.success) {
-        toast.error(data.error);
+        toast.error("Failed to retire credits",{
+          id: "retire-credits",
+        });
         return;
       }
 
-      toast.success(data.message);
+      // toast.success(data.message,{
+      //   id: "retire-credits",
+      // });
 
       // Update local state and generate certificate only after everything succeeds
       setProjects(
@@ -258,7 +265,7 @@ export default function CreditPurchasePage() {
   };
 
   return (
-    <div className="container mx-auto py-10 max-w-[90%]">
+    <div className="container py-10 md:px-4">
       <Card className="mb-8 w-full">
         <CardHeader>
           <CardTitle>Retire Credits</CardTitle>
