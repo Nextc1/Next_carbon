@@ -211,9 +211,9 @@ export default function CreditPurchasePage() {
       toast.loading("Retiring credits...", {
         id: "retire-credits",
       });
+
       const { data } = await axios.post(
-        "https://api.nextcarbon.in/api/offset",
-        {
+        "http://localhost:3000/api/offset",{
           userId: currentUserId,
           propertyId: selectedProjectId,
           credits: values.credits,
@@ -230,7 +230,6 @@ export default function CreditPurchasePage() {
         return;
       } else {
         // Trigger re-fetch of purchases
-        console.log(data,"data")
         const { data: newPurchases, error } = await supabase
           .from("offset")
           .select("*")
@@ -243,11 +242,11 @@ export default function CreditPurchasePage() {
 
         generateRetirementCertificate({
           retiredOn: format(new Date(), "dd MMM yyyy"),
-          tonnes: values.credits.toString(),
-          beneficiaryAddress: values.address,
+          tonnes: data.data?.credits,
+          beneficiaryAddress: data.data?.beneficiary_address,
           project: selectedProject.name || "",
-          transactionHash: data.transaction_hash,
-          description: values.description,
+          transactionHash: data.data?.transaction_hash,
+          description: data.data?.description,
         });
 
         form.reset();
@@ -266,7 +265,9 @@ export default function CreditPurchasePage() {
     } catch (error) {
       // console.error("Transaction failed:", error);
       toast.error(
-        "Transaction failed. Please contact support if you see inconsistent state."
+        "Transaction failed. Please contact support if you see inconsistent state.",{
+          id: "retire-credits",
+        }
       );
       throw new Error(`Transaction failed: ${error}`);
     } finally {
