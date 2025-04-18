@@ -170,6 +170,7 @@ export default function CreditPurchasePage() {
         if (error) throw error;
 
         if (data) {
+          console.log(data,"data")
           setPurchases(data);
         }
       } catch (error) {
@@ -242,7 +243,7 @@ export default function CreditPurchasePage() {
 
         generateRetirementCertificate({
           retiredOn: format(new Date(), "dd MMM yyyy"),
-          tonnes: data.data?.credits,
+          tonnes: String(data.data?.credits),
           beneficiaryAddress: data.data?.beneficiary_address,
           project: selectedProject.name || "",
           transactionHash: data.data?.transaction_hash,
