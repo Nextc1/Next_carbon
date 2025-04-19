@@ -170,6 +170,7 @@ export default function CreditPurchasePage() {
         if (error) throw error;
 
         if (data) {
+          console.log(data,"data")
           setPurchases(data);
         }
       } catch (error) {
@@ -197,7 +198,7 @@ export default function CreditPurchasePage() {
   // Form submission handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!currentUserId || !selectedProject) {
-      toast.error("Please login and select a project");
+      toast.error("Please login or select a project");
       return;
     }
 
@@ -208,12 +209,12 @@ export default function CreditPurchasePage() {
 
     setLoading(true);
     try {
-      toast.loading("Retiring credits...",{
+      toast.loading("Retiring credits...", {
         id: "retire-credits",
       });
+
       const { data } = await axios.post(
-        "https://api.nextcarbon.in/api/offset",
-        {
+        "https://api.nextcarbon.in/api/offset",{
           userId: currentUserId,
           propertyId: selectedProjectId,
           credits: values.credits,
@@ -224,17 +225,37 @@ export default function CreditPurchasePage() {
       );
 
       if (!data.success) {
-        toast.error("Failed to retire credits",{
+        toast.error("Failed to retire credits", {
           id: "retire-credits",
         });
         return;
+      } else {
+        // Trigger re-fetch of purchases
+        const { data: newPurchases, error } = await supabase
+          .from("offset")
+          .select("*")
+          .eq("user_id", currentUserId)
+          .order("created_at", { ascending: false });
+
+        if (!error && newPurchases) {
+          setPurchases(newPurchases);
+        }
+
+        generateRetirementCertificate({
+          retiredOn: format(new Date(), "dd MMM yyyy"),
+          tonnes: String(data.data?.credits),
+          beneficiaryAddress: data.data?.beneficiary_address,
+          project: selectedProject.name || "",
+          transactionHash: data.data?.transaction_hash,
+          description: data.data?.description,
+        });
+
+        form.reset();
+        toast.success("Credits retired successfully", {
+          id: "retire-credits",
+        });
       }
 
-      // toast.success(data.message,{
-      //   id: "retire-credits",
-      // });
-
-      // Update local state and generate certificate only after everything succeeds
       setProjects(
         projects
           .map((p) =>
@@ -242,23 +263,14 @@ export default function CreditPurchasePage() {
           )
           .filter((p) => p.credits > 0)
       );
-
-      generateRetirementCertificate({
-        retiredOn: format(new Date(), "dd MMM yyyy"),
-        tonnes: values.credits.toString(),
-        beneficiaryAddress: values.address,
-        project: selectedProject.name || "",
-        transactionHash: data.transaction_hash,
-        description: values.description,
-      });
-
-      form.reset();
-      toast.success("Credits retired successfully");
     } catch (error) {
-      console.error("Transaction failed:", error);
+      // console.error("Transaction failed:", error);
       toast.error(
-        "Transaction failed. Please contact support if you see inconsistent state."
+        "Transaction failed. Please contact support if you see inconsistent state.",{
+          id: "retire-credits",
+        }
       );
+      throw new Error(`Transaction failed: ${error}`);
     } finally {
       setLoading(false);
     }

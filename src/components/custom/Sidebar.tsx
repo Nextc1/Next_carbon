@@ -20,8 +20,7 @@ const Sidebar = ({isOpen}:{isOpen:boolean}) => {
           name: "Launchpad / Invest",
           icon: faSeedling,
           path: "/dashboard/launchpad",
-        },
-        { name: "Buy / Trade", icon: faCoins, path: "/dashboard/trade" },
+        }
       ];
 
     const accountItems = [
@@ -31,6 +30,7 @@ const Sidebar = ({isOpen}:{isOpen:boolean}) => {
           icon: faRightLeft,
           path: "/dashboard/history",
         },
+        {name:"Offset", icon:faCoins, path:"/offset"},
       ];
 
 

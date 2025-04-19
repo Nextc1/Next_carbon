@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 
 interface RetirementCertificate {
     retiredOn: string;
-    tonnes: string;
+    tonnes: string ;
     // beneficiary: string;
     description: string;
     beneficiaryAddress: string;
@@ -71,7 +71,8 @@ export const generateRetirementCertificate = async (data: RetirementCertificate)
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
-    doc.text(`Zomato`, 22, 102);
+    doc.text(`Zomato`, 22, 102); //data.beneficiary
+    // doc.text(`${data.beneficiary}`, 22, 102);
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
