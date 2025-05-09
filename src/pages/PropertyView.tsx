@@ -59,6 +59,7 @@ const PropertyView = () => {
   }
 
   async function handleBuy() {
+    console.log("buy btn clicked")
     if (!user) {
       // TODO: Show a toast message
       return;

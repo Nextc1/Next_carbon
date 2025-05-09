@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom"
 import {
   Table,
   TableHeader,
@@ -60,6 +61,7 @@ export default function YourPropertiesTable({ properties }: YourPropertiesTableP
     column: "propertyName",
     direction: "ascending",
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     setPortfolioProps(properties);
@@ -124,10 +126,10 @@ export default function YourPropertiesTable({ properties }: YourPropertiesTableP
       case "currentPrice":
         return item.price;
       case "totalShares":
-        return item.available_shares;
-      case "actions":
+        return item.yourShares;
+      case "actions": 
         return (
-          <button className="px-4 py-2 font-bold text-white bg-black border-2 border-black rounded-full hover:bg-white hover:text-black">
+          <button onClick={()=>{navigate(`/property/view/${item.id}`)}} className="px-4 py-2 font-bold text-white bg-black border-2 border-black rounded-full hover:bg-white hover:text-black">
             View
           </button>
         );

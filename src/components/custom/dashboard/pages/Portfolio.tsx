@@ -42,7 +42,7 @@ function Portfolio() {
       try {
         const { data, error } = await supabase
           .from("owners")
-          .select(" property_data!inner(*)")
+          .select("credits, property_data!inner(*)")
           .eq("user_id", user);
 
         if (error) {
@@ -55,10 +55,12 @@ function Portfolio() {
           console.error("No data returned from Supabase.");
           return;
         }
+        let credits:number;
         const formattedProjects = data.flatMap((row) => {
           const properties = Array.isArray(row.property_data)
             ? row.property_data
             : [row.property_data];
+               credits = row.credits || 0;
 
           return properties.map((property: Property) => ({
             id: property.id,
@@ -69,28 +71,32 @@ function Portfolio() {
             status: property.status,
             available_shares: property.available_shares ?? 0,
             propertyName: property.name,
-            yourShares: property.available_shares || 0,
+            yourShares: credits,
             latitude: property.latitude ?? 0,
             longitude: property.longitude ?? 0,
           }));
         });
-        console.log("formatedProjects are : ", formattedProjects);
+        // console.log("formatedProjects are : ", formattedProjects);
+        // console.log("Fetched credits:", credits);
         setProjects(formattedProjects);
 
         const totalShares = formattedProjects.reduce(
-          (sum, p) => sum + p.available_shares,
+          (sum, p) => sum + p.yourShares,
           0
         );
+        const totalSharesFormatted = totalShares.toFixed(2);
         const totalPortfolioValue = formattedProjects.reduce(
-          (sum, p) => sum + p.price * p.available_shares,
+          (sum, p) => sum + p.price * p.yourShares,
           0
         );
 
+        const totalPortfolioValueFormatted = totalPortfolioValue.toFixed(2);
+
         setMetadata({
           totalProfit: 0,
-          totalCurrentPortfolioValue: totalPortfolioValue,
+          totalCurrentPortfolioValue: parseFloat(totalPortfolioValueFormatted),
           totalPropertiesHeld: formattedProjects.length,
-          totalSharesHeld: totalShares,
+          totalSharesHeld: parseFloat(totalSharesFormatted),
         });
       } catch (err) {
         console.error("Unexpected error:", err);
