@@ -118,7 +118,7 @@ export const ProjectsTable = () => {
         fetchProjects();
     }, []);
 
-    if (loading) {
+    if (loading) {  
         return <div>Loading...</div>;
     }
 
@@ -192,7 +192,7 @@ export const ProjectsTable = () => {
             <Table
                 isStriped
                 aria-label="Example static collection table"
-                className="w-[94vw] md:w-full overflow-x-scroll border rounded-2xl"
+                className="w-full md:w-full overflow-x-scroll border rounded-2xl"
                 sortDescriptor={sortDescriptor}
                 onSortChange={setSortDescriptor}
             >
