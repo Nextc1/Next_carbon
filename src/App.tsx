@@ -14,6 +14,7 @@ import PropertyView from "./pages/PropertyView";
 import Portfolio from "./components/custom/dashboard/pages/Portfolio";
 import CreatePropertyPage from "./pages/project.create";
 import CreditPurchasePage from "./pages/offset";
+import Transaction_History from "./components/custom/dashboard/pages/Transaction_History";
 
 function App() {
   // const { isLoading } = useLoadingStore();
@@ -42,6 +43,16 @@ function App() {
               </Dashboard>
             </AuthMiddleware>
           }
+        />
+        <Route
+        path="/dashboard/history"
+        element={
+          <AuthMiddleware>
+            <Dashboard>
+              <Transaction_History/>
+            </Dashboard>
+          </AuthMiddleware>
+        }
         />
         <Route path="/property/view/:id" element={<PropertyView />} />
         <Route path="/login" element={<Login />} />
