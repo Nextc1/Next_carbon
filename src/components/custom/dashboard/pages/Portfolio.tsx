@@ -117,14 +117,14 @@ function Portfolio() {
           <div className="grid grid-cols-2 gap-6 p-4 mb-6 text-center">
             <div className="flex flex-col items-center justify-center py-10 px-6 bg-black/10 rounded-2xl min-w-0 max-w-full">
               <p className="text-5xl font-bold text-black ">
-                ${metadata.totalCurrentPortfolioValue}
+                ₹{metadata.totalCurrentPortfolioValue}
               </p>
               <p className="text-2xl">Your Portfolio</p>
             </div>
 
             <div className="flex flex-col items-center justify-center py-8 bg-black/10 rounded-2xl">
               <p className="text-5xl font-bold text-black">
-                ${metadata.totalProfit}
+                ₹{metadata.totalProfit}
               </p>
               <p className="text-2xl">Total Profit</p>
             </div>

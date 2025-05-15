@@ -52,7 +52,7 @@ const PropertyView = () => {
     };
 
     fetchProjects();
-  }, []);
+  }, [propertyId, user]);
 
   if (loading) {
     return <div>Loading...</div>;
