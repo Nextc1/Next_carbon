@@ -79,7 +79,10 @@ export default function YourTransactionTable({ transactions }: Props) {
       return new Date(txn.created_at).toLocaleDateString();
     }
     if (key === "amount") {
-      return `${txn.amount.toFixed(2)}`;
+      return `${(txn.amount / 80).toFixed(2)}`;
+    }
+    if (key === "currency") {
+      return "USD";
     }
     return txn[key];
   };
@@ -105,7 +108,11 @@ export default function YourTransactionTable({ transactions }: Props) {
       >
         <TableHeader>
           {columns.map((col) => (
-            <TableColumn key={col.uid} allowsSorting className="text-black text-md">
+            <TableColumn
+              key={col.uid}
+              allowsSorting
+              className="text-black text-md"
+            >
               {col.name}
             </TableColumn>
           ))}
