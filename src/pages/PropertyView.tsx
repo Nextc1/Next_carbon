@@ -20,6 +20,7 @@ import { supabase } from "@/lib/supabase";
 import { Project } from "index";
 import { useRazorpay } from "react-razorpay";
 import axios from "axios";
+import { toast } from "sonner";
 
 const PropertyView = () => {
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ const PropertyView = () => {
   async function handleBuy() {
     console.log("buy btn clicked")
     if (!user) {
+      toast.error("Please login to invest");
       // TODO: Show a toast message
       return;
     }
@@ -75,7 +77,7 @@ const PropertyView = () => {
     );
 
     if (!orderData || orderData.success === false) {
-      // TODO: Show a toast message
+      toast.error("Failed to create order");
       return;
     }
 
@@ -88,6 +90,9 @@ const PropertyView = () => {
       order_id: orderData.data.id,
       handler: async (res) => {
         try {
+          toast.loading("Verifying payment...", {
+            id: "razorpay",
+          });
           const { data } = await axios.post(
             `${import.meta.env.VITE_BACKEND_URL}/api/orders/verify`,
             {
@@ -101,12 +106,16 @@ const PropertyView = () => {
           );
 
           if (!data || data.success === false) {
+            toast.error("Payment verification failed", {
+              id: "razorpay",
+            });
             // TODO: Show a toast message
             return;
           }
 
-          // TODO: Show a success toast message
-          alert("Payment successful");
+          toast.success("Payment successful", {
+            id: "razorpay",
+          });
         } catch (error) {
           console.log(error);
         }
@@ -466,26 +475,6 @@ const PropertyView = () => {
                 </p>
               </div>
               <div className="h-2 mt-2 mb-2 bg-gray-200 rounded-full">
-                {/* <div
-          className="h-2 bg-black rounded-full"
-          style={{ width: "75%" }}
-        ></div> */}
-
-                {/* <Progress
-          aria-label="Loading..."
-          value={
-            (currentProperty.launchpadData[0].Raised /
-              currentProperty.JSONData.attributes
-                .initialPropertyValue) *
-            100
-          }
-          className="max-w-md"
-          classNames={{
-            base: "",
-            track: "h-[10px] bg-white",
-            indicator: "bg-black",
-          }}
-        /> */}
               </div>
             </div>
 
