@@ -15,6 +15,8 @@ import Portfolio from "./components/custom/dashboard/pages/Portfolio";
 import CreatePropertyPage from "./pages/project.create";
 import CreditPurchasePage from "./pages/offset";
 import Transaction_History from "./components/custom/dashboard/pages/Transaction_History";
+import ForgotPassword from "./pages/forgot-password";
+import { UpdatePasswordForm } from "./pages/update-password";
 
 function App() {
   // const { isLoading } = useLoadingStore();
@@ -56,6 +58,8 @@ function App() {
         />
         <Route path="/property/view/:id" element={<PropertyView />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword/>} />
+        <Route path="/update-password" element={<UpdatePasswordForm />} />
         <Route path="/signup" element={<Signup />} />
         <Route
           path="/test"
