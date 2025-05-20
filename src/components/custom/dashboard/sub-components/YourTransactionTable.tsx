@@ -79,7 +79,7 @@ export default function YourTransactionTable({ transactions }: Props) {
       return new Date(txn.created_at).toLocaleDateString();
     }
     if (key === "amount") {
-      return `${(txn.amount / 80).toFixed(2)}`;
+      return `${(txn.amount / 85.53).toFixed(2)}`;
     }
     if (key === "currency") {
       return "USD";
