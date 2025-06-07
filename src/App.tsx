@@ -1,8 +1,6 @@
 import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import TopBanner from "./components/custom/TopBanner";
-// import { useLoadingStore } from "./state-management/store";
-// import LoadingOverlay from "./components/custom/LoadingOverlay";
 import { Toaster } from "@/components/ui/sonner"
 import Navbar from "./components/custom/Navbar";
 import { Dashboard } from "./pages/Dashboard";
@@ -15,6 +13,7 @@ import Portfolio from "./components/custom/dashboard/pages/Portfolio";
 import CreatePropertyPage from "./pages/project.create";
 import CreditPurchasePage from "./pages/offset";
 import Transaction_History from "./components/custom/dashboard/pages/Transaction_History";
+import ProjectStatus from "./pages/project.status";
 import ForgotPassword from "./pages/forgot-password";
 import { UpdatePasswordForm } from "./pages/update-password";
 
@@ -57,6 +56,7 @@ function App() {
         }
         />
         <Route path="/property/view/:id" element={<PropertyView />} />
+        <Route path="/property/view/:id/status" element={<ProjectStatus />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword/>} />
         <Route path="/update-password" element={<UpdatePasswordForm />} />
