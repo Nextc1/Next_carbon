@@ -42,12 +42,9 @@ const PropertyView = () => {
         .eq("id", propertyId);
       if (error) {
         alert("error");
-        // setData(data);
       }
       if (data) {
         setData(data[0]);
-        // const types = Array.from(new Set(data.map(project => project.type)));
-        // setData(types);
       }
       setLoading(false);
     };
@@ -63,7 +60,6 @@ const PropertyView = () => {
     console.log("buy btn clicked")
     if (!user) {
       toast.error("Please login to invest");
-      // TODO: Show a toast message
       return;
     }
 
@@ -109,7 +105,6 @@ const PropertyView = () => {
             toast.error("Payment verification failed", {
               id: "razorpay",
             });
-            // TODO: Show a toast message
             return;
           }
 
