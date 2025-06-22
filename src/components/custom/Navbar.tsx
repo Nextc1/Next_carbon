@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -6,11 +6,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "../ui/button";
 import { useAuth } from "@/hooks/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { MoveRight } from "lucide-react";
 
 function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
-
+    const [ isKyc, setIsKyc ] = useState(false)
     //Auth Hook 
     const { user, handleLogout } = useAuth()
     // Access location and navigate for routing
@@ -21,6 +23,20 @@ function Navbar() {
     // const handleGoToApp = () => {
     //     navigate("/dashboard");
     // }
+
+    useEffect(() => {
+        const checkUserKyc = async () => {
+            const { data, error } = await supabase.from('users').select('kyc').eq('id', `${user?.id}`);
+            if (!error && data && data.length > 0) {
+                setIsKyc(Boolean(data[0].kyc));
+            } else {
+                setIsKyc(false);
+            }
+
+        };
+        checkUserKyc();
+
+    }, [])
 
     // Handle navigation and close menu for mobile
     const handleNavigate = (path: string) => {
@@ -93,7 +109,7 @@ function Navbar() {
                         ))}
                     </div>
 
-                    {/* Wallet and App buttons */}
+                    {/* kyc, Wallet and App buttons */}
                     <div className="flex flex-col items-center gap-4 mt-4 md:flex-row md:mt-0">
                         {user ? <>
                             <button onClick={handleLogout} className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white">
@@ -114,12 +130,16 @@ function Navbar() {
                                     <button onClick={() => navigate('/dashboard')}
                                         className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
                                     >
-                                       <p>App</p>
-                                       <FontAwesomeIcon icon={faChevronRight} size="2xs" />
+                                        <p>App</p>
+                                        <FontAwesomeIcon icon={faChevronRight} size="2xs" />
                                     </button>
                                 ) : null}
                             </>
                         )}
+                        {/* // kyc status update */}
+                    {
+                        isKyc ? <div></div> : <div className="hover:underline-offset-4"> <Button variant={'destructive'} className="flex flex-row  items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md">Complete your kyc now <MoveRight/> </Button></div>
+                    }
                     </div>
                 </div>
             </div>
