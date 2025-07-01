@@ -16,13 +16,7 @@ function Navbar() {
     // Access location and navigate for routing
     const location = useLocation();
     const navigate = useNavigate();
-
-    // Handle the navigation to the app
-    // const handleGoToApp = () => {
-    //     navigate("/dashboard");
-    // }
-
-    // Handle navigation and close menu for mobile
+    
     const handleNavigate = (path: string) => {
         navigate(path);
         setMenuOpen(false); // Close menu on selection
