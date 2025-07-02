@@ -19,6 +19,7 @@ function Navbar() {
     const location = useLocation();
     const navigate = useNavigate();
 
+
     // Handle the navigation to the app
     // const handleGoToApp = () => {
     //     navigate("/dashboard");
