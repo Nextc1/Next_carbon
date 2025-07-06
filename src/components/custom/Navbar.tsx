@@ -8,11 +8,13 @@ import { Button } from "../ui/button";
 import { useAuth } from "@/hooks/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { MoveRight } from "lucide-react";
+import KycForm from "./dashboard/sub-components/KycForm";
 
 function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
-    const [ isKyc, setIsKyc ] = useState(false)
+    const [isKyc, setIsKyc] = useState(false)
+    const [showKycDialog, setShowKycDialog] = useState(false);
     //Auth Hook 
     const { user, handleLogout } = useAuth()
     // Access location and navigate for routing
@@ -116,6 +118,11 @@ function Navbar() {
                             <button onClick={handleLogout} className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white">
                                 <p>Sign out</p>
                             </button>
+
+                            {/* // kyc status update */}
+                            {
+                                isKyc ? <div></div> : <div className="hover:underline-offset-4"> <Button  onClick={() => setShowKycDialog(true)} variant={'destructive'} className="flex flex-row  items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md">Complete your kyc<MoveRight /> </Button></div>
+                            }
                         </> : <>
 
                             <button onClick={() => navigate('/login')}
@@ -137,11 +144,8 @@ function Navbar() {
                                 ) : null}
                             </>
                         )}
-                        {/* // kyc status update */}
-                    {
-                        isKyc ? <div></div> : <div className="hover:underline-offset-4"> <Button variant={'destructive'} className="flex flex-row  items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md">Complete your kyc now <MoveRight/> </Button></div>
-                    }
                     </div>
+                     <KycForm open={showKycDialog} onOpenChange={setShowKycDialog} />
                 </div>
             </div>
         </nav>
