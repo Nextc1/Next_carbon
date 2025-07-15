@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   Table,
@@ -28,7 +28,7 @@ interface User {
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filterKyc, setFilterKyc] = useState<'all' | 'kyc' | 'nonkyc'>('all');
 
@@ -78,6 +78,7 @@ const Users = () => {
   };
 
   const handleEdit = (userId: string) => {
+    console.log(userId)
     toast.info('Edit user feature coming soon.');
   };
 

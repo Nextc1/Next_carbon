@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/AuthContext';
 import { Navigate } from 'react-router-dom';
 
 const AdminMiddleware = ({ children }: { children: React.ReactNode }) => {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
 
   if (!user) {
     return (

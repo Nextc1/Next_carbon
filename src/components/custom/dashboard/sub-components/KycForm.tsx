@@ -84,7 +84,6 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
 
     setIsUploading(true);
 
-    const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${file.name}`;
     const filePath = `kyc/${fileName}`;
 

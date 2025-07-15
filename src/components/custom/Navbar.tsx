@@ -28,7 +28,7 @@ function Navbar() {
         }[];
     } | null;
 
-    const [kycDetails, setKycDetails] = useState<KycDetailsType>(null);
+    const [, setKycDetails] = useState<KycDetailsType>(null);
     const [showKycDialog, setShowKycDialog] = useState(false);
     //Auth Hook 
     const { user, handleLogout } = useAuth()
