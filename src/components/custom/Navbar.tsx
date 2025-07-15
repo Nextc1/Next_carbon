@@ -14,6 +14,21 @@ function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
     const [isKyc, setIsKyc] = useState(false)
+    type KycDetailsType = {
+        id: any;
+        full_name: any;
+        phonenumber: any;
+        document_type: any;
+        document_number: any;
+        users: {
+            id: any;
+            email: any;
+            username: any;
+            kyc: any;
+        }[];
+    } | null;
+
+    const [kycDetails, setKycDetails] = useState<KycDetailsType>(null);
     const [showKycDialog, setShowKycDialog] = useState(false);
     //Auth Hook 
     const { user, handleLogout } = useAuth()
@@ -28,19 +43,52 @@ function Navbar() {
     // }
 
     useEffect(() => {
-        const checkUserKyc = async () => {
-            const { data, error } = await supabase.from('users').select('kyc').eq('id', `${user?.id}`);
-            if (!error && data && data.length > 0) {
-                setIsKyc(Boolean(data[0].kyc));
-            } else {
-                setIsKyc(false);
-            }
+    const checkUserKycWithJoin = async () => {
+ 
 
-        };
-        checkUserKyc();
+        // Step 2: Query joined data from user_kyc and users
+        const { data, error } = await supabase
+            .from('user_kyc')
+            .select(`
+                id,
+                fullName,
+                phoneNumber,
+                documentType,
+                documentNumber,
+                users (
+                    id,
+                    email,
+                    username,
+                    kyc
+                )
+            `)
+            .eq('user_id', user?.id)
+            .maybeSingle(); // Only 1 KYC per user
 
-    }, [])
+        if (error) {
+            console.error('Join fetch failed:', error.message);
+            return;
+        }
 
+        if (data) {
+            console.log("kyc data is ", data)
+            setIsKyc(true);
+            setKycDetails({
+                id: data.id,
+                full_name: data.fullName,
+                phonenumber: data.phoneNumber,
+                document_type: data.documentType,
+                document_number: data.documentNumber,
+                users: data.users
+            });
+        } else {
+            setIsKyc(false);
+            setKycDetails(null);
+        }
+    };
+
+    checkUserKycWithJoin();
+}, []);
     // Handle navigation and close menu for mobile
     const handleNavigate = (path: string) => {
         navigate(path);
@@ -121,7 +169,7 @@ function Navbar() {
 
                             {/* // kyc status update */}
                             {
-                                isKyc ? <div></div> : <div className="hover:underline-offset-4"> <Button  onClick={() => setShowKycDialog(true)} variant={'destructive'} className="flex flex-row  items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md">Complete your kyc<MoveRight /> </Button></div>
+                                isKyc ? <div></div> : <div className="hover:underline-offset-4"> <Button onClick={() => setShowKycDialog(true)} variant={'destructive'} className="flex flex-row  items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md">Complete your kyc<MoveRight /> </Button></div>
                             }
                         </> : <>
 
@@ -145,7 +193,7 @@ function Navbar() {
                             </>
                         )}
                     </div>
-                     <KycForm open={showKycDialog} onOpenChange={setShowKycDialog} />
+                    <KycForm open={showKycDialog} onOpenChange={setShowKycDialog} />
                 </div>
             </div>
         </nav>

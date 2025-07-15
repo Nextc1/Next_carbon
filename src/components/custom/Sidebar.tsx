@@ -22,7 +22,7 @@ import KycForm from "./dashboard/sub-components/KycForm";
 
 const Sidebar = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(true);
-  const [activeMenu, setActiveMenu] = useState("All Properties");
+  const [activeMenu, setActiveMenu] = useState("All Projects");
   const [isKyc, setIsKyc] = useState(false);
   const [showKycDialog, setShowKycDialog] = useState(false);
   const [showMainDialog, setShowMainDialog] = useState(false);
@@ -41,26 +41,37 @@ const Sidebar = () => {
 
   useEffect(() => {
     const checkUserKyc = async () => {
+      if (!user?.id) return;
+
       const { data, error } = await supabase
-        .from("users")
-        .select("kyc")
-        .eq("id", `${user?.id}`);
-      if (!error && data && data.length > 0) {
-        setIsKyc(Boolean(data[0].kyc));
+        .from("user_kyc")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setIsKyc(true);
       } else {
         setIsKyc(false);
       }
     };
+
     checkUserKyc();
   }, [user]);
 
-  const handleMenuClick = (item:any) => {
-    if (isKyc) {
-      setActiveMenu(item.name);
-      navigate(item.path);
-    } else {
+  const handleMenuClick = (item: any) => {
+    const kycRequired = [
+      "/dashboard/portfolio",
+      "/dashboard/history",
+      "/offset",
+    ];
+
+    if (kycRequired.includes(item.path) && !isKyc) {
       setShowKycDialog(true);
       setShowMainDialog(false);
+    } else {
+      setActiveMenu(item.name);
+      navigate(item.path);
     }
   };
 
@@ -103,20 +114,18 @@ const Sidebar = () => {
                 Marketplace
               </h2>
               <hr className="w-full h-[2px] bg-gray-200 mt-2" />
-              <div className="py-0 my-0 mb-2 divider"></div>
-
-              <ul className="w-full space-y-2">
+              <ul className="w-full space-y-2 mt-4">
                 {menuItems.map((item) => (
                   <li
                     key={item.name}
                     className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${
                       activeMenu === item.name
-                        ? "bg-gray-200"
+                        ? "bg-gray-200 font-semibold"
                         : "hover:bg-gray-200"
                     }`}
                     onClick={() => {
-                      setActiveMenu(item.name)
-                      navigate(item.path)
+                      setActiveMenu(item.name);
+                      navigate(item.path);
                     }}
                   >
                     <FontAwesomeIcon icon={item.icon} />
@@ -131,9 +140,8 @@ const Sidebar = () => {
                 Your Account
               </h2>
               <hr className="w-full h-[2px] bg-gray-200 mt-2" />
-              <div className="py-0 my-0 mb-2 divider"></div>
 
-              <ul className="w-full space-y-2">
+              <ul className="w-full space-y-2 mt-4">
                 {accountItems.map((item) => (
                   <li
                     key={item.name}
@@ -164,27 +172,28 @@ const Sidebar = () => {
         </div>
       </aside>
 
-      {/* KYC Dialog */}
+      {/* Dialog: Alert for completing KYC */}
       <Dialog open={showKycDialog} onOpenChange={setShowKycDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Complete Your KYC</DialogTitle>
             <DialogDescription>
-              You need to complete your KYC to access this page.
+              You need to complete your KYC to access this feature.
             </DialogDescription>
           </DialogHeader>
           <Button
             className="mt-4 w-full"
             onClick={() => {
               setShowKycDialog(false);
-              setShowMainDialog(true)
-              // navigate("/kyc"); 
+              setShowMainDialog(true); // Open KYC form
             }}
           >
             Complete KYC Now
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* KYC Form Dialog */}
       <KycForm open={showMainDialog} onOpenChange={setShowMainDialog} />
     </div>
   );

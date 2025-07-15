@@ -54,20 +54,30 @@ const PropertyView = () => {
 
     fetchProjects();
   }, [propertyId, user]);
+
   useEffect(() => {
     const checkUserKyc = async () => {
+      if (!user?.id) return;
+
       const { data, error } = await supabase
-        .from("users")
-        .select("kyc")
-        .eq("id", `${user?.id}`);
-      if (!error && data && data.length > 0) {
-        setIsKyc(Boolean(data[0].kyc));
-      } else {
+        .from("user_kyc")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle(); // Because one user has one KYC record
+
+      if (error) {
+        console.error("Error fetching user KYC:", error.message);
         setIsKyc(false);
+        return;
       }
+
+      // If KYC record exists, mark as true
+      setIsKyc(!!data);
     };
+
     checkUserKyc();
   }, [user]);
+
 
   if (loading) {
     return <div>Loading...</div>;
