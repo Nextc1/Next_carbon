@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -6,17 +6,90 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "../ui/button";
 import { useAuth } from "@/hooks/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { MoveRight } from "lucide-react";
+import KycForm from "./dashboard/sub-components/KycForm";
 
 function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
+    const [isKyc, setIsKyc] = useState(false)
+    type KycDetailsType = {
+        id: any;
+        full_name: any;
+        phonenumber: any;
+        document_type: any;
+        document_number: any;
+        users: {
+            id: any;
+            email: any;
+            username: any;
+            kyc: any;
+        }[];
+    } | null;
 
+    const [, setKycDetails] = useState<KycDetailsType>(null);
+    const [showKycDialog, setShowKycDialog] = useState(false);
     //Auth Hook 
     const { user, handleLogout } = useAuth()
     // Access location and navigate for routing
     const location = useLocation();
     const navigate = useNavigate();
-    
+
+
+    // Handle the navigation to the app
+    // const handleGoToApp = () => {
+    //     navigate("/dashboard");
+    // }
+
+    useEffect(() => {
+    const checkUserKycWithJoin = async () => {
+ 
+
+        // Step 2: Query joined data from user_kyc and users
+        const { data, error } = await supabase
+            .from('user_kyc')
+            .select(`
+                id,
+                fullName,
+                phoneNumber,
+                documentType,
+                documentNumber,
+                users (
+                    id,
+                    email,
+                    username,
+                    kyc
+                )
+            `)
+            .eq('user_id', user?.id)
+            .maybeSingle(); // Only 1 KYC per user
+
+        if (error) {
+            console.error('Join fetch failed:', error.message);
+            return;
+        }
+
+        if (data) {
+            console.log("kyc data is ", data)
+            setIsKyc(true);
+            setKycDetails({
+                id: data.id,
+                full_name: data.fullName,
+                phonenumber: data.phoneNumber,
+                document_type: data.documentType,
+                document_number: data.documentNumber,
+                users: data.users
+            });
+        } else {
+            setIsKyc(false);
+            setKycDetails(null);
+        }
+    };
+
+    checkUserKycWithJoin();
+}, []);
+    // Handle navigation and close menu for mobile
     const handleNavigate = (path: string) => {
         navigate(path);
         setMenuOpen(false); // Close menu on selection
@@ -87,12 +160,17 @@ function Navbar() {
                         ))}
                     </div>
 
-                    {/* Wallet and App buttons */}
+                    {/* kyc, Wallet and App buttons */}
                     <div className="flex flex-col items-center gap-4 mt-4 md:flex-row md:mt-0">
                         {user ? <>
                             <button onClick={handleLogout} className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white">
                                 <p>Sign out</p>
                             </button>
+
+                            {/* // kyc status update */}
+                            {
+                                isKyc ? <div></div> : <div className="hover:underline-offset-4"> <Button onClick={() => setShowKycDialog(true)} variant={'destructive'} className="flex flex-row  items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md">Complete your kyc<MoveRight /> </Button></div>
+                            }
                         </> : <>
 
                             <button onClick={() => navigate('/login')}
@@ -108,13 +186,14 @@ function Navbar() {
                                     <button onClick={() => navigate('/dashboard')}
                                         className="flex flex-row bg-black items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white"
                                     >
-                                       <p>App</p>
-                                       <FontAwesomeIcon icon={faChevronRight} size="2xs" />
+                                        <p>App</p>
+                                        <FontAwesomeIcon icon={faChevronRight} size="2xs" />
                                     </button>
                                 ) : null}
                             </>
                         )}
                     </div>
+                    <KycForm open={showKycDialog} onOpenChange={setShowKycDialog} />
                 </div>
             </div>
         </nav>

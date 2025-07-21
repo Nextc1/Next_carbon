@@ -21,12 +21,15 @@ import { Project } from "index";
 import { useRazorpay } from "react-razorpay";
 import axios from "axios";
 import { toast } from "sonner";
+import KycForm from "@/components/custom/dashboard/sub-components/KycForm";
 
 const PropertyView = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Project | null>(null);
   const { user } = useAuth();
+  const [isKyc, setIsKyc] = useState(false);
+  const [showKycDialog, setShowKycDialog] = useState(false)
   const [investObject, setInvestObject] = useState({
     amount: "",
   });
@@ -51,6 +54,30 @@ const PropertyView = () => {
 
     fetchProjects();
   }, [propertyId, user]);
+
+  useEffect(() => {
+    const checkUserKyc = async () => {
+      if (!user?.id) return;
+
+      const { data, error } = await supabase
+        .from("user_kyc")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle(); // Because one user has one KYC record
+
+      if (error) {
+        console.error("Error fetching user KYC:", error.message);
+        setIsKyc(false);
+        return;
+      }
+
+      // If KYC record exists, mark as true
+      setIsKyc(!!data);
+    };
+
+    checkUserKyc();
+  }, [user]);
+
 
   if (loading) {
     return <div>Loading...</div>;
@@ -516,7 +543,7 @@ const PropertyView = () => {
               />
             </div>
 
-            {user ? (
+            {user && isKyc ? (
               <>
                 <button
                   className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
@@ -528,15 +555,16 @@ const PropertyView = () => {
             ) : (
               <>
                 <button
-                  className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
-                  onClick={() => navigate("/login")}
+                  className="w-full py-2 mb-4 text-lg font-normal text-white bg-red-500 border-2 border-red-500  rounded-xl hover:bg-red-500/80  hover:text-white hover:underline "
+                  onClick={() => setShowKycDialog(true)}
                 >
-                  <p>Login to Invest</p>
+                  <p>Complete kyc to invest</p>
                 </button>
               </>
             )}
           </div>
         </div>
+        <KycForm open={showKycDialog} onOpenChange={setShowKycDialog} />
       </div>
     </div>
   );
