@@ -12,9 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
-import { Trash, Pencil } from 'lucide-react';
+import { Trash } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface UserKyc {
@@ -33,7 +32,7 @@ interface UserKyc {
 const Users = () => {
   const [users, setUsers] = useState<UserKyc[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserKyc[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [filterKyc, setFilterKyc] = useState<'all' | 'kyc' | 'nonkyc'>('all');
@@ -87,9 +86,9 @@ const Users = () => {
     }
   };
 
-  const handleEdit = (kycId: string) => {
-    toast.info('Edit user feature coming soon.');
-  };
+  // const handleEdit = (kycId: string) => {
+  //   toast.info('Edit user feature coming soon.');
+  // };
 
   const handleFilterChange = (value: 'all' | 'kyc' | 'nonkyc') => {
     setFilterKyc(value);
