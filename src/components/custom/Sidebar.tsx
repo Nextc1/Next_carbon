@@ -23,7 +23,6 @@ import KycForm from "./dashboard/sub-components/KycForm";
 const Sidebar = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState("All Projects");
-  const [isKyc, setIsKyc] = useState(false);
   const [kycStatus, setKycStatus] = useState<boolean | null>(null); // null = not submitted, false = pending, true = verified
   const [showKycDialog, setShowKycDialog] = useState(false);
   const [showMainDialog, setShowMainDialog] = useState(false);
