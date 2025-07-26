@@ -28,7 +28,7 @@ const PropertyView = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Project | null>(null);
   const { user } = useAuth();
-  const [isKyc, setIsKyc] = useState(false);
+  const [isKyc, setIsKyc] = useState<null | any>(undefined);
   const [showKycDialog, setShowKycDialog] = useState(false)
   const [investObject, setInvestObject] = useState({
     amount: "",
@@ -67,12 +67,12 @@ const PropertyView = () => {
 
       if (error) {
         console.error("Error fetching user KYC:", error.message);
-        setIsKyc(false);
+        setIsKyc(null);
         return;
       }
 
       // If KYC record exists, mark as true
-      setIsKyc(!!data);
+      setIsKyc(data);
     };
 
     checkUserKyc();
@@ -545,23 +545,32 @@ const PropertyView = () => {
 
             {user && isKyc ? (
               <>
-                <button
-                  className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
-                  onClick={async () => await handleBuy()}
-                >
-                  <p>Invest Now with USDC</p>
-                </button>
+                {isKyc.status ? (
+                  <button
+                    className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
+                    onClick={async () => await handleBuy()}
+                  >
+                    <p>Invest Now with USDC</p>
+                  </button>
+                ) : (
+                  <button
+                    // disabled
+                    onClick={() => setShowKycDialog(true)}
+                    className="w-full py-2 mb-4 text-lg font-normal text-white bg-green-500 border-2 hover:bg-green-500/80 rounded-xl cursor-pointer"
+                  >
+                    <p>Your KYC is under process</p>
+                  </button>
+                )}
               </>
             ) : (
-              <>
-                <button
-                  className="w-full py-2 mb-4 text-lg font-normal text-white bg-red-500 border-2 border-red-500  rounded-xl hover:bg-red-500/80  hover:text-white hover:underline "
-                  onClick={() => setShowKycDialog(true)}
-                >
-                  <p>Complete kyc to invest</p>
-                </button>
-              </>
+              <button
+                className="w-full py-2 mb-4 text-lg font-normal text-white bg-red-500 border-2 border-red-500 rounded-xl hover:bg-red-500/80 hover:text-white hover:underline"
+                onClick={() => setShowKycDialog(true)}
+              >
+                <p>Complete KYC to invest</p>
+              </button>
             )}
+
           </div>
         </div>
         <KycForm open={showKycDialog} onOpenChange={setShowKycDialog} />

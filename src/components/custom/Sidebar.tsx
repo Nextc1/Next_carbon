@@ -23,7 +23,7 @@ import KycForm from "./dashboard/sub-components/KycForm";
 const Sidebar = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState("All Projects");
-  const [isKyc, setIsKyc] = useState(false);
+  const [kycStatus, setKycStatus] = useState<boolean | null>(null); // null = not submitted, false = pending, true = verified
   const [showKycDialog, setShowKycDialog] = useState(false);
   const [showMainDialog, setShowMainDialog] = useState(false);
   const { user, handleLogout } = useAuth();
@@ -45,19 +45,26 @@ const Sidebar = () => {
 
       const { data, error } = await supabase
         .from("user_kyc")
-        .select("id")
+        .select("status")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (!error && data) {
-        setIsKyc(true);
+      if (!error) {
+        if (data?.status === true) {
+          setKycStatus(true); // approved
+        } else if (data?.status === false) {
+          setKycStatus(false); // submitted but pending
+        } else {
+          setKycStatus(null); // no record
+        }
       } else {
-        setIsKyc(false);
+        setKycStatus(null);
       }
     };
 
     checkUserKyc();
   }, [user]);
+
 
   const handleMenuClick = (item: any) => {
     const kycRequired = [
@@ -66,9 +73,15 @@ const Sidebar = () => {
       "/offset",
     ];
 
-    if (kycRequired.includes(item.path) && !isKyc) {
-      setShowKycDialog(true);
-      setShowMainDialog(false);
+    if (kycRequired.includes(item.path)) {
+      if (kycStatus === true) {
+        setActiveMenu(item.name);
+        navigate(item.path);
+      } else if (kycStatus === false) {
+        setShowMainDialog(true); // show pending dialog
+      } else {
+        setShowKycDialog(true); // prompt to start KYC
+      }
     } else {
       setActiveMenu(item.name);
       navigate(item.path);
@@ -118,11 +131,10 @@ const Sidebar = () => {
                 {menuItems.map((item) => (
                   <li
                     key={item.name}
-                    className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${
-                      activeMenu === item.name
-                        ? "bg-gray-200 font-semibold"
-                        : "hover:bg-gray-200"
-                    }`}
+                    className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${activeMenu === item.name
+                      ? "bg-gray-200 font-semibold"
+                      : "hover:bg-gray-200"
+                      }`}
                     onClick={() => {
                       setActiveMenu(item.name);
                       navigate(item.path);
@@ -145,11 +157,10 @@ const Sidebar = () => {
                 {accountItems.map((item) => (
                   <li
                     key={item.name}
-                    className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${
-                      activeMenu === item.name
-                        ? "bg-gray-200 font-semibold"
-                        : "hover:bg-gray-200"
-                    }`}
+                    className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${activeMenu === item.name
+                      ? "bg-gray-200 font-semibold"
+                      : "hover:bg-gray-200"
+                      }`}
                     onClick={() => handleMenuClick(item)}
                   >
                     <FontAwesomeIcon icon={item.icon} />
@@ -178,17 +189,40 @@ const Sidebar = () => {
           <DialogHeader>
             <DialogTitle>Complete Your KYC</DialogTitle>
             <DialogDescription>
-              You need to complete your KYC to access this feature.
+              You need to complete and verify your KYC to access this feature.
             </DialogDescription>
           </DialogHeader>
           <Button
             className="mt-4 w-full"
             onClick={() => {
               setShowKycDialog(false);
-              setShowMainDialog(true); // Open KYC form
+              setShowMainDialog(true);
             }}
           >
             Complete KYC Now
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={kycStatus === false && showMainDialog} onOpenChange={setShowMainDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>KYC Under Review</DialogTitle>
+            <DialogDescription>
+              <div className="mt-6 p-6 border border-yellow-300 bg-yellow-50 rounded-xl text-center">
+                <p className="text-lg font-medium text-yellow-800">⏳ KYC Under Review</p>
+                <p className="text-sm text-yellow-700 mt-2">
+                  Your KYC documents have been submitted. Our team is reviewing them.<br />
+                  You will be notified once approved.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <Button
+            className="mt-4 w-full"
+            onClick={() => setShowMainDialog(false)}
+          >
+            OK
           </Button>
         </DialogContent>
       </Dialog>

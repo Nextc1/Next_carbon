@@ -7,15 +7,14 @@ import { Navigate } from 'react-router-dom';
 const AdminMiddleware = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // null = loading, true/false = result
-
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (user?.id) {
         const { data, error } = await supabase
-          .from('users')
-          .select('Is_Admin')
-          .eq('id', user.id)
-          .single();
+        .from('users')
+        .select('Is_Admin')
+        .eq('id', user.id)
+        .single();
 
         if (error || !data) {
           console.error('Error fetching admin status:', error);
@@ -36,8 +35,7 @@ const AdminMiddleware = ({ children }: { children: React.ReactNode }) => {
   if (isAdmin === null) {
     return <div className="text-center p-8">Checking permissions...</div>;
   }
-
-  if (user.email !== 'admin@gmail.com') {
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -32,7 +31,7 @@ const initialFormState = {
   username: '',
   documentType: '',
   documentNumber: '',
-  documentImage: '' // store URL as string
+  documentImage: ''
 };
 
 const initialErrors = {
@@ -50,7 +49,7 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState(initialErrors);
   const [userId, setUserId] = useState<string | null>(null);
-  const [hasKyc, setHasKyc] = useState<boolean>(false);
+  const [kycStatus, setKycStatus] = useState<null | 'pending' | 'verified'>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -63,11 +62,15 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
 
       const { data: kycData } = await supabase
         .from('user_kyc')
-        .select('id')
+        .select('status')
         .eq('user_id', id)
         .maybeSingle();
 
-      if (kycData) setHasKyc(true);
+      if (kycData) {
+        setKycStatus(kycData.status ? 'verified' : 'pending');
+      } else {
+        setKycStatus(null); // no KYC submitted
+      }
     };
 
     checkUserKyc();
@@ -83,7 +86,6 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
     if (!file) return;
 
     setIsUploading(true);
-
     const fileName = `${Date.now()}-${file.name}`;
     const filePath = `kyc/${fileName}`;
 
@@ -104,7 +106,6 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
       .getPublicUrl(filePath);
 
     const publicUrl = publicUrlData?.publicUrl;
-
     if (!publicUrl) {
       toast.error('Could not get document URL.');
       setIsUploading(false);
@@ -143,7 +144,7 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm() || !userId || hasKyc) return;
+    if (!validateForm() || !userId || kycStatus !== null) return;
 
     const kycPayload = {
       user_id: userId,
@@ -157,15 +158,15 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
 
     const { error } = await supabase.from('user_kyc').insert([kycPayload]);
     if (error) {
-      toast.error('KYC submission failed.');
+      toast.error('KYC submission failed. Try again');
       console.error(error.message);
       return;
     }
 
     await supabase.from('users').update({ kyc: true }).eq('id', userId);
 
-    toast.success('KYC submitted successfully.');
-    setHasKyc(true);
+    toast.success('KYC submitted successfully. Please wait for approval.');
+    setKycStatus('pending');
     setFormData(initialFormState);
     onOpenChange(false);
     window.location.reload();
@@ -182,14 +183,17 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
         <DialogHeader>
           <DialogTitle>KYC Form</DialogTitle>
           <DialogDescription>
-            {hasKyc
-              ? 'You have already completed your KYC.'
+            {kycStatus === 'pending'
+              ? 'Your KYC has been submitted and is under review.'
+              : kycStatus === 'verified'
+              ? 'Your KYC is verified.'
               : 'Fill the following form to complete your KYC.'}
           </DialogDescription>
         </DialogHeader>
 
-        {!hasKyc && (
+        {kycStatus === null && (
           <div className="space-y-4">
+            {/* Input fields */}
             {['fullName', 'phoneNumber', 'username'].map((field) => (
               <div key={field} className="space-y-2">
                 <Label htmlFor={field}>{field.replace(/([A-Z])/g, ' $1')}</Label>
@@ -264,11 +268,42 @@ const KycForm: React.FC<KycFormProps> = ({ open, onOpenChange }) => {
           </div>
         )}
 
+        {kycStatus === 'pending' && (
+          <div className="mt-6 p-6 border border-yellow-300 bg-yellow-50 rounded-xl text-center">
+            <p className="text-lg font-medium text-yellow-800">⏳ KYC Under Review</p>
+            <p className="text-sm text-yellow-700 mt-2">
+              Your KYC documents have been submitted. Our team is reviewing them.<br />
+              You will be notified once approved.
+            </p>
+          </div>
+        )}
+
+        {kycStatus === 'verified' && (
+          <div className="mt-6 p-6 border border-green-300 bg-green-50 rounded-xl text-center">
+            <p className="text-lg font-medium text-green-800">✅ KYC Verified</p>
+            <p className="text-sm text-green-700 mt-2">
+              You’ve already completed KYC. You’re good to go!
+            </p>
+          </div>
+        )}
+
         <DialogFooter className="mt-6 flex justify-end gap-3">
+          {
+            kycStatus === 'pending' ? (
+              <Button
+                  className="mt-4 w-full"
+                  onClick={handleCancel}
+                >
+                  OK
+                </Button>
+            ): (
+
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            Close
           </Button>
-          {!hasKyc && (
+            )
+          }
+          {kycStatus === null && (
             <Button onClick={handleSubmit} disabled={isUploading}>
               {isUploading ? 'Uploading...' : 'Submit'}
             </Button>

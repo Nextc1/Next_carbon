@@ -13,7 +13,6 @@ import KycForm from "./dashboard/sub-components/KycForm";
 function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
-    const [isKyc, setIsKyc] = useState(false)
     type KycDetailsType = {
         id: any;
         full_name: any;
@@ -28,7 +27,7 @@ function Navbar() {
         }[];
     } | null;
 
-    const [, setKycDetails] = useState<KycDetailsType>(null);
+    const [kycDetails, setKycDetails] = useState<KycDetailsType>(null);
     const [showKycDialog, setShowKycDialog] = useState(false);
     //Auth Hook 
     const { user, handleLogout } = useAuth()
@@ -43,52 +42,43 @@ function Navbar() {
     // }
 
     useEffect(() => {
-    const checkUserKycWithJoin = async () => {
- 
-
-        // Step 2: Query joined data from user_kyc and users
-        const { data, error } = await supabase
-            .from('user_kyc')
-            .select(`
+        const checkUserKyc = async () => {
+            if (!user?.id) return;
+            const { data, error } = await supabase
+                .from('user_kyc')
+                .select(`
                 id,
                 fullName,
                 phoneNumber,
                 documentType,
-                documentNumber,
-                users (
-                    id,
-                    email,
-                    username,
-                    kyc
-                )
+                documentNumber
             `)
-            .eq('user_id', user?.id)
-            .maybeSingle(); // Only 1 KYC per user
+                .eq('user_id', user.id)
+                .maybeSingle();
 
-        if (error) {
-            console.error('Join fetch failed:', error.message);
-            return;
-        }
+            if (error) {
+                console.error('KYC fetch error:', error.message);
+                return;
+            }
 
-        if (data) {
-            console.log("kyc data is ", data)
-            setIsKyc(true);
-            setKycDetails({
-                id: data.id,
-                full_name: data.fullName,
-                phonenumber: data.phoneNumber,
-                document_type: data.documentType,
-                document_number: data.documentNumber,
-                users: data.users
-            });
-        } else {
-            setIsKyc(false);
-            setKycDetails(null);
-        }
-    };
+            if (data) {
+                setKycDetails({
+                    id: data.id,
+                    full_name: data.fullName,
+                    phonenumber: data.phoneNumber,
+                    document_type: data.documentType,
+                    document_number: data.documentNumber,
+                    users: [], // Removed user linking, keep structure if needed
+                });
+            } else {
+                setKycDetails(null);
+            }
+        };
 
-    checkUserKycWithJoin();
-}, []);
+
+        checkUserKyc();
+    }, [user]);
+
     // Handle navigation and close menu for mobile
     const handleNavigate = (path: string) => {
         navigate(path);
@@ -168,9 +158,28 @@ function Navbar() {
                             </button>
 
                             {/* // kyc status update */}
-                            {
-                                isKyc ? <div></div> : <div className="hover:underline-offset-4"> <Button onClick={() => setShowKycDialog(true)} variant={'destructive'} className="flex flex-row  items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md">Complete your kyc<MoveRight /> </Button></div>
-                            }
+                            {kycDetails ? (
+                                <div>
+                                    <Button
+                                        onClick={() => setShowKycDialog(true)}
+                                        className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold bg-green-500 hover:bg-green-500/80 text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md"
+                                    >
+                                        Your KYC is in Process <MoveRight />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="hover:underline-offset-4">
+                                    <Button
+                                        onClick={() => setShowKycDialog(true)}
+                                        variant="destructive"
+                                        className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md"
+                                    >
+                                        Complete your KYC <MoveRight />
+                                    </Button>
+                                </div>
+                            )}
+
+
                         </> : <>
 
                             <button onClick={() => navigate('/login')}
