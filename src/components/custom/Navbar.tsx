@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -88,6 +89,7 @@ function Navbar() {
     };
 
     checkUserKycWithJoin();
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
     // Handle navigation and close menu for mobile
     const handleNavigate = (path: string) => {
