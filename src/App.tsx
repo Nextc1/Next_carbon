@@ -115,16 +115,6 @@ function App() {
             </AdminMiddleware>
           }
         />
-        {/* <Route
-          path="/admin/create"
-          element={
-            <AdminMiddleware>
-              <Admin>
-                <CreateProperty />
-              </Admin>
-            </AdminMiddleware>
-          }
-        /> */}
       </Routes>
 
       <Toaster richColors />

@@ -24,11 +24,13 @@ export function UpdateManager({ updates, onChange }: UpdateManagerProps) {
     const handleAdd = () => {
         const newUpdate: Update = {
             id: uuidv4(),
-            date: new Date().toISOString().split("T")[0],
+            date: new Date().toISOString(),
             message: "",
         }
+        
         setEditingId(newUpdate.id)
         setEditForm(newUpdate)
+        console.log(newUpdate)
         onChange([...updates, newUpdate])
     }
 
@@ -50,7 +52,6 @@ export function UpdateManager({ updates, onChange }: UpdateManagerProps) {
 
     const handleCancel = () => {
         if (editForm.message === "" && editForm.date) {
-            // If it's a new empty update, remove it
             onChange(updates.filter((update) => update.id !== editingId))
         }
         setEditingId(null)
@@ -88,8 +89,10 @@ export function UpdateManager({ updates, onChange }: UpdateManagerProps) {
                                 {editingId === update.id ? (
                                     <div className="space-y-3">
                                         <div>
+                                            {/* <Calendar buttonVariant={"outline"}  mode="single" selected={new Date()} /> */}
                                             <Input
                                                 type="date"
+                                                max={new Date().toISOString().split("T")[0]} // Prevent future dates
                                                 value={editForm.date || ""}
                                                 onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
                                             />

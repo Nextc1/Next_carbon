@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { ProgressItem, ProgressManager } from "./progress";
 import { Update, UpdateManager } from "./updates";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 export default function CreatePropertyForm() {
   const [progress,] = useState<ProgressItem[]>([]);
@@ -50,6 +51,7 @@ export default function CreatePropertyForm() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    toast.loading("Creating property...", { id: "create-property" });
     e.preventDefault();
     setUploading(true);
 
@@ -77,7 +79,7 @@ export default function CreatePropertyForm() {
       imageUrl = publicUrl.publicUrl;
     }
 
-    const { data } = await supabase
+    const { error } = await supabase
       .from("property_data")
       .insert({
         ...formData,
@@ -87,8 +89,42 @@ export default function CreatePropertyForm() {
         attributes: [formData.attributes],
         value_parameters: [formData.value_parameters],
       });
-    console.log({ ...formData, image: imageUrl, data });
-    alert("Property Created Successfully");
+
+    if (error) {
+      toast.error("Error creating property", {
+        id: "create-property",
+      });
+      setUploading(false);
+      return;
+    }
+
+    toast.success("Property Created Successfully", {
+      id: "create-property",
+    });
+    setFormData({
+      name: "",
+      status: "",
+      price: "",
+      available_shares: "",
+      location: "",
+      type: "",
+      growth: "",
+      description: "",
+      image: null,
+      progress: [],
+      updates: [],
+      attributes: {
+        sharePerNFT: 0,
+        propertyType: "",
+        initialSharePrice: 0,
+        initialPropertyValue: 0,
+      },
+      value_parameters: {
+        roi: 0,
+        appreciation: 0,
+        rentalYield: 0,
+      }
+    });
     setUploading(false);
   };
 

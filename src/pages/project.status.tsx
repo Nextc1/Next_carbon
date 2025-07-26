@@ -17,7 +17,7 @@ interface ProgressStage {
 
 interface UpdateMessage {
   id: number
-  created_at: string
+  date: string
   message: string
 }
 
@@ -61,8 +61,6 @@ const ProjectStatus = () => {
       }
 
       if (projectData) {
-        console.log(projectData[0])
-
         const project = projectData[0]
         if (!project.progress) {
           project.progress = getDefaultprogress(project.type)
@@ -108,23 +106,23 @@ const ProjectStatus = () => {
     return [
       {
         id: 123,
-        created_at: "2024-01-13T10:00:00Z",
+        date: "2024-01-13T10:00:00Z",
         message:
           "Equipment procurement phase completed successfully. All major components have been sourced and quality tested.",
       },
       {
         id: 121243,
-        created_at: "2024-01-12T14:30:00Z",
+        date: "2024-01-12T14:30:00Z",
         message: "Environmental impact assessment approved by regulatory authorities. Project cleared for next phase.",
       },
       {
         id: 124,
-        created_at: "2024-01-10T09:15:00Z",
+        date: "2024-01-10T09:15:00Z",
         message: "Site assessment completed. Soil conditions and environmental factors are optimal for the project.",
       },
       {
         id: 125,
-        created_at: "2024-01-08T16:45:00Z",
+        date: "2024-01-08T16:45:00Z",
         message: "Project officially launched. Initial site surveys and planning activities have commenced.",
       },
     ]
@@ -314,7 +312,7 @@ const ProjectStatus = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-sm font-medium text-gray-900">Project Update</p>
-                        <p className="text-sm text-gray-500">{formatDate(update.created_at)}</p>
+                        <p className="text-sm text-gray-500">{formatDate(update.date)}</p>
                       </div>
                       <p className="text-gray-700 text-sm leading-relaxed">{update.message}</p>
                     </div>
