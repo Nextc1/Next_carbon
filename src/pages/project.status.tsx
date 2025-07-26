@@ -37,12 +37,11 @@ interface Project {
     initialPropertyValue: number
   }
   value_parameters: any
-  updates: any
   id: string
   growth: string
   description: string
-  progressStages?: ProgressStage[]
-  updatesMessage?: UpdateMessage[]
+  progress?: ProgressStage[]
+  updates?: UpdateMessage[]
 }
 
 const ProjectStatus = () => {
@@ -65,11 +64,11 @@ const ProjectStatus = () => {
         console.log(projectData[0])
 
         const project = projectData[0]
-        if (!project.progressStages) {
-          project.progressStages = getDefaultProgressStages(project.type)
+        if (!project.progress) {
+          project.progress = getDefaultprogress(project.type)
         }
-        if (!project.updatesMessage) {
-          project.updatesMessage = getDefaultUpdates()
+        if (!project.updates) {
+          project.updates = getDefaultUpdates()
         }
 
         setData(project)
@@ -81,7 +80,7 @@ const ProjectStatus = () => {
   }, [propertyId, user])
 
   // Generate default progress stages based on project type
-  const getDefaultProgressStages = (projectType: string): ProgressStage[] => {
+  const getDefaultprogress = (projectType: string): ProgressStage[] => {
     const renewableStages = [
       { id: "stage1", title: "Site Assessment", isDone: true },
       { id: "stage2", title: "Environmental Permits", isDone: true },
@@ -132,13 +131,13 @@ const ProjectStatus = () => {
   }
 
   const getCompletedStages = () => {
-    if (!data?.progressStages) return 0
-    return data.progressStages.filter((stage) => stage.isDone).length
+    if (!data?.progress) return 0
+    return data.progress.filter((stage) => stage.isDone).length
   }
 
   const getProgressPercentage = () => {
-    if (!data?.progressStages) return 0
-    return Math.round((getCompletedStages() / data.progressStages.length) * 100)
+    if (!data?.progress) return 0
+    return Math.round((getCompletedStages() / data.progress.length) * 100)
   }
 
   const formatDate = (dateString: string) => {
@@ -226,7 +225,7 @@ const ProjectStatus = () => {
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl">Progress Overview</CardTitle>
               <Badge variant="secondary" className="text-sm">
-                {getCompletedStages()} of {data.progressStages?.length || 0} completed
+                {getCompletedStages()} of {data.progress?.length || 0} completed
               </Badge>
             </div>
           </CardHeader>
@@ -247,7 +246,7 @@ const ProjectStatus = () => {
 
             {/* Progress Stages */}
             <div className="space-y-4">
-              {data.progressStages?.map((stage, index) => (
+              {data.progress?.map((stage, index) => (
                 <div key={stage.id} className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
                     {stage.isDone ? (
@@ -299,10 +298,10 @@ const ProjectStatus = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {data.updatesMessage?.map((update, index) => (
+              {data.updates?.map((update, index) => (
                 <div key={update.id} className="relative">
                   {/* Timeline line */}
-                  {index !== (data.updatesMessage?.length || 0) - 1 && (
+                  {index !== (data.updates?.length || 0) - 1 && (
                     <div className="absolute left-4 top-8 w-0.5 h-16 bg-gray-200"></div>
                   )}
 
@@ -321,7 +320,7 @@ const ProjectStatus = () => {
                     </div>
                   </div>
 
-                  {index !== (data.updatesMessage?.length || 0) - 1 && <Separator className="mt-6" />}
+                  {index !== (data.updates?.length || 0) - 1 && <Separator className="mt-6" />}
                 </div>
               ))}
             </div>

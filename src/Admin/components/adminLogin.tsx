@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useState } from 'react'
-import AdminRegister from '../AdminRegister'
+import AdminRegister from './adminRegister'
 
 const AdminLogin = () => {
     const [showRegisterdialog, setShowRegisterDialog] = useState(false)

@@ -10,16 +10,16 @@ import AllProducts from "./components/custom/dashboard/pages/AllProducts";
 import AuthMiddleware from "./components/custom/auth/AuthMiddleware";
 import PropertyView from "./pages/PropertyView";
 import Portfolio from "./components/custom/dashboard/pages/Portfolio";
-import CreatePropertyPage from "./pages/project.create";
 import CreditPurchasePage from "./pages/offset";
 import Transaction_History from "./components/custom/dashboard/pages/Transaction_History";
 import ProjectStatus from "./pages/project.status";
 import ForgotPassword from "./pages/forgot-password";
 import { UpdatePasswordForm } from "./pages/update-password";
-import Admin from "./Admin";
+import Admin from "./admin";
 import AdminMiddleware from "./components/custom/auth/AdminMiddleware";
-import Users from "./Admin/users";
-import { ProjectsTable } from "@/components/ProjectsTable";  // Import your default admin page
+import Users from "./admin/allUsers";
+import { ProjectsTable } from "@/components/ProjectsTable"; 
+import CreatePropertyForm from "./admin/createProperty/createProperty";
 
 function App() {
   const location = useLocation();
@@ -81,28 +81,20 @@ function App() {
             </AuthMiddleware>
           }
         />
+
+        {/* Admin Routes */}
+
         <Route
-          path="/addproperty"
+          path="/admin/create"
           element={
-            <AuthMiddleware>
-              <Dashboard>
-                <CreatePropertyPage />
-              </Dashboard>
-            </AuthMiddleware>
-          }
-        />
-        <Route
-          path="/test"
-          element={
-            <AuthMiddleware>
-              <Dashboard>
-                <div className="p-10">Protected Page</div>
-              </Dashboard>
-            </AuthMiddleware>
+            <AdminMiddleware>
+              <Admin>
+                <CreatePropertyForm />
+              </Admin>
+            </AdminMiddleware>
           }
         />
 
-        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -123,6 +115,16 @@ function App() {
             </AdminMiddleware>
           }
         />
+        {/* <Route
+          path="/admin/create"
+          element={
+            <AdminMiddleware>
+              <Admin>
+                <CreateProperty />
+              </Admin>
+            </AdminMiddleware>
+          }
+        /> */}
       </Routes>
 
       <Toaster richColors />
