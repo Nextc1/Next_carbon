@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import AdminLogin from '@/Admin/AdminLogin';
 import { useAuth } from '@/hooks/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Navigate } from 'react-router-dom';
@@ -17,8 +16,8 @@ const AdminMiddleware = ({ children }: { children: React.ReactNode }) => {
         .single();
 
         if (error || !data) {
-          console.error('Error fetching admin status:', error);
           setIsAdmin(false);
+          throw new Error(`Failed to fetch admin status ${error}`);
         } else {
           setIsAdmin(data.Is_Admin === true);
         }
@@ -29,7 +28,7 @@ const AdminMiddleware = ({ children }: { children: React.ReactNode }) => {
   }, [user]);
 
   if (!user) {
-    return <AdminLogin />;
+    return <Navigate to="/login" />;
   }
 
   if (isAdmin === null) {

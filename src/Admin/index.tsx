@@ -1,4 +1,4 @@
-import AdminSideBar from "./AdminSideBar";
+import AdminSideBar from "./components/adminSidebar";
 
 interface AdminProps {
   children?: React.ReactNode;
@@ -6,14 +6,13 @@ interface AdminProps {
 
 const Admin = ({ children }: AdminProps) => {
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Sidebar */}
-      <div className="w-[250px] fixed top-0 left-0 h-screen border-r bg-background z-10">
+    <div className="flex h-screen w-full">
+      <div className="h-full relative">
         <AdminSideBar />
       </div>
 
       {/* Main Content */}
-      <main className="ml-[250px] flex-1 py-8 px-6 overflow-y-auto min-h-screen bg-muted">
+      <main className=" flex-1 py-8 px-6 overflow-y-auto min-h-screen">
         {children}
       </main>
     </div>

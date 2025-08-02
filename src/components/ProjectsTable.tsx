@@ -22,22 +22,6 @@ import { ChevronUpIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Project } from "index";
 
-// interface Project {
-//     id: string;
-//     created_at: string;
-//     name: string;
-//     status: string;
-//     price: number;
-//     available_shares: number;
-//     location: string;
-//     type: string;
-//     image: string;
-//     attributes?: undefined;
-//     value_parameters?: undefined;
-//     updates?: undefined;
-//     growth: string;
-// }
-
 const columns = [
     { uid: "cover", name: "" },
     { uid: "name", name: "Project Name" },

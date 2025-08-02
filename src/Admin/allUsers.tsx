@@ -116,6 +116,7 @@ const Users = () => {
 
   useEffect(() => {
     handleFilterChange(filterKyc);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, search, filterKyc]);
 
   return (
