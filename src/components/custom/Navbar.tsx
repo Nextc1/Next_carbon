@@ -15,16 +15,17 @@ function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
     type KycDetailsType = {
-        id: any;
-        full_name: any;
-        phonenumber: any;
-        document_type: any;
-        document_number: any;
+        id: string;
+        full_name: string;
+        phonenumber: number;
+        document_type: string;
+        document_number: string;
+        status: Boolean;
         users: {
-            id: any;
-            email: any;
-            username: any;
-            kyc: any;
+            id: string;
+            email: string;
+            username: string;
+            kyc: Boolean;
         }[];
     } | null;
 
@@ -52,7 +53,8 @@ function Navbar() {
                 fullName,
                 phoneNumber,
                 documentType,
-                documentNumber
+                documentNumber,
+                status
             `)
                 .eq('user_id', user.id)
                 .maybeSingle();
@@ -69,8 +71,10 @@ function Navbar() {
                     phonenumber: data.phoneNumber,
                     document_type: data.documentType,
                     document_number: data.documentNumber,
+                    status: data.status,
                     users: [], // Removed user linking, keep structure if needed
                 });
+
             } else {
                 setKycDetails(null);
             }
@@ -160,14 +164,16 @@ function Navbar() {
 
                             {/* // kyc status update */}
                             {kycDetails ? (
-                                <div>
-                                    <Button
-                                        onClick={() => setShowKycDialog(true)}
-                                        className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold bg-green-500 hover:bg-green-500/80 text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md"
-                                    >
-                                        Your KYC is in Process <MoveRight />
-                                    </Button>
-                                </div>
+                                kycDetails?.status === false ? (
+                                    <div>
+                                        <Button
+                                            onClick={() => setShowKycDialog(true)}
+                                            className="flex flex-row items-center gap-x-3 px-4 py-2 !rounded-[10px] h-[40px] font-semibold bg-green-500 hover:bg-green-500/80 text-white justify-center hover:underline underline-offset-2 transition-all duration-300 text-md"
+                                        >
+                                            Your KYC is in Process <MoveRight />
+                                        </Button>
+                                    </div>
+                                ) : null
                             ) : (
                                 <div className="hover:underline-offset-4">
                                     <Button

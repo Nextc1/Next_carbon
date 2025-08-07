@@ -61,7 +61,7 @@ const PropertyView = () => {
 
       const { data, error } = await supabase
         .from("user_kyc")
-        .select("id")
+        .select("*")
         .eq("user_id", user.id)
         .maybeSingle(); // Because one user has one KYC record
 
@@ -70,7 +70,6 @@ const PropertyView = () => {
         setIsKyc(null);
         return;
       }
-
       // If KYC record exists, mark as true
       setIsKyc(data);
     };
@@ -545,7 +544,7 @@ const PropertyView = () => {
 
             {user && isKyc ? (
               <>
-                {isKyc.status ? (
+                {isKyc.status === true ? (
                   <button
                     className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
                     onClick={async () => await handleBuy()}
