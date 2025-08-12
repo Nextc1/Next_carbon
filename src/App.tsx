@@ -15,11 +15,11 @@ import Transaction_History from "./components/custom/dashboard/pages/Transaction
 import ProjectStatus from "./pages/project.status";
 import ForgotPassword from "./pages/forgot-password";
 import { UpdatePasswordForm } from "./pages/update-password";
-import Admin from "./admin";
 import AdminMiddleware from "./components/custom/auth/AdminMiddleware";
-import Users from "./admin/allUsers";
 import { ProjectsTable } from "@/components/ProjectsTable"; 
+import Admin from "./admin";
 import CreatePropertyForm from "./admin/createProperty/createProperty";
+import Users from "./admin/allUsers";
 
 function App() {
   const location = useLocation();
