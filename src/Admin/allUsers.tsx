@@ -36,6 +36,8 @@ const Users = () => {
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [filterKyc, setFilterKyc] = useState<'all' | 'kyc' | 'nonkyc'>('all');
+  const [selectedUser, setSelectedUser] = useState<UserKyc | null>(null);
+
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -43,7 +45,6 @@ const Users = () => {
       .from('user_kyc')
       .select('*')
       .order('created_at', { ascending: false });
-
     if (!error && data) {
       setUsers(data);
       setFilteredUsers(data);
@@ -177,7 +178,15 @@ const Users = () => {
                 {/* onClick={() => handleDelete(user.id)} */}
                 <Dialog open={open} onOpenChange={setOpen} >
                   <DialogTrigger asChild>
-                    <Button size="icon" variant="destructive" className="p-2">
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="p-2"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setOpen(true);
+                      }}
+                    >
                       <Trash size={12} />
                     </Button>
                   </DialogTrigger>
@@ -185,7 +194,9 @@ const Users = () => {
                   <DialogContent className=''>
                     <DialogHeader
                     >
-                      <DialogTitle>Are you sure you want to delete this user?</DialogTitle>
+                      <DialogTitle>
+                        Are you sure you want to delete this {selectedUser?.fullName || selectedUser?.username || 'userrrr'}?
+                      </DialogTitle>
                     </DialogHeader>
 
                     <DialogFooter>
@@ -195,8 +206,11 @@ const Users = () => {
                       <Button
                         variant="destructive"
                         onClick={() => {
-                          handleDelete(user.id);
-                          setOpen(false);
+                          if (selectedUser) {
+                            handleDelete(selectedUser.id);
+                            setSelectedUser(null);
+                            setOpen(false);
+                          }
                         }}
                       >
                         Delete
