@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -7,29 +7,16 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "../ui/button";
 import { useAuth } from "@/hooks/AuthContext";
-import { supabase } from "@/lib/supabase";
 import { MoveRight } from "lucide-react";
 import KycForm from "./dashboard/sub-components/KycForm";
+import { useKyc } from "@/hooks/KycContext";
 
 function Navbar() {
     // State for managing mobile menu visibility
     const [menuOpen, setMenuOpen] = useState(false);
-    type KycDetailsType = {
-        id: string;
-        full_name: string;
-        phonenumber: number;
-        document_type: string;
-        document_number: string;
-        status: Boolean;
-        users: {
-            id: string;
-            email: string;
-            username: string;
-            kyc: Boolean;
-        }[];
-    } | null;
+    const {kycDetails, kycStatus} = useKyc()
 
-    const [kycDetails, setKycDetails] = useState<KycDetailsType>(null);
+    // const [kycDetails, setKycDetails] = useState<KycDetailsType>(null);
     const [showKycDialog, setShowKycDialog] = useState(false);
     //Auth Hook 
     const { user, handleLogout } = useAuth()
@@ -43,46 +30,6 @@ function Navbar() {
     //     navigate("/dashboard");
     // }
 
-    useEffect(() => {
-        const checkUserKyc = async () => {
-            if (!user?.id) return;
-            const { data, error } = await supabase
-                .from('user_kyc')
-                .select(`
-                id,
-                fullName,
-                phoneNumber,
-                documentType,
-                documentNumber,
-                status
-            `)
-                .eq('user_id', user.id)
-                .maybeSingle();
-
-            if (error) {
-                console.error('KYC fetch error:', error.message);
-                return;
-            }
-
-            if (data) {
-                setKycDetails({
-                    id: data.id,
-                    full_name: data.fullName,
-                    phonenumber: data.phoneNumber,
-                    document_type: data.documentType,
-                    document_number: data.documentNumber,
-                    status: data.status,
-                    users: [], // Removed user linking, keep structure if needed
-                });
-
-            } else {
-                setKycDetails(null);
-            }
-        };
-
-
-        checkUserKyc();
-    }, [user]);
 
     // Handle navigation and close menu for mobile
     const handleNavigate = (path: string) => {
@@ -164,7 +111,7 @@ function Navbar() {
 
                             {/* // kyc status update */}
                             {kycDetails ? (
-                                kycDetails?.status === false ? (
+                               kycStatus === false ? (
                                     <div>
                                         <Button
                                             onClick={() => setShowKycDialog(true)}
