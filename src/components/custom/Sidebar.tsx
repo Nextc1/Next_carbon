@@ -6,12 +6,12 @@ import {
   faRightLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/AuthContext";
-import { supabase } from "@/lib/supabase";
+
 import {
   Dialog,
   DialogContent,
@@ -20,15 +20,17 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import KycForm from "./dashboard/sub-components/KycForm";
+import { useKyc } from "@/hooks/KycContext";
 
 const Sidebar = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState("All Projects");
-  const [kycStatus, setKycStatus] = useState<boolean | null>(null); // null = not submitted, false = pending, true = verified
+  // const [kycStatus, setKycStatus] = useState<boolean | null>(null); // null = not submitted, false = pending, true = verified
   const [showKycDialog, setShowKycDialog] = useState(false);
   const [showMainDialog, setShowMainDialog] = useState(false);
-  const { user, handleLogout } = useAuth();
+  const { handleLogout } = useAuth();
   const navigate = useNavigate();
+  const { kycStatus } = useKyc();
 
   const menuItems = [
     { name: "All Projects", icon: faHouse, path: "/dashboard" },
@@ -39,33 +41,6 @@ const Sidebar = () => {
     { name: "Transaction History", icon: faRightLeft, path: "/dashboard/history" },
     { name: "Offset", icon: faCoins, path: "/offset" },
   ];
-
-  useEffect(() => {
-    const checkUserKyc = async () => {
-      if (!user?.id) return;
-
-      const { data, error } = await supabase
-        .from("user_kyc")
-        .select("status")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!error) {
-        if (data?.status === true) {
-          setKycStatus(true); // approved
-        } else if (data?.status === false) {
-          setKycStatus(false); // submitted but pending
-        } else {
-          setKycStatus(null); // no record
-        }
-      } else {
-        setKycStatus(null);
-      }
-    };
-
-    checkUserKyc();
-  }, [user]);
-
 
   const handleMenuClick = (item: any) => {
     const kycRequired = [

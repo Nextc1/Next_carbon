@@ -3,7 +3,7 @@ import PriceChart from "@/components/custom/charts/PriceChart";
 import Mapbox from "@/components/custom/Mapbox";
 import ValueParameter from "@/components/custom/ValueParameter";
 import ViewHighlight from "@/components/custom/ViewHighlight";
-import ViewPageUpdates from "@/components/custom/ViewPageUpdates";
+// import ViewPageUpdates from "@/components/custom/ViewPageUpdates";
 import {
   faCalendarDay,
   faChevronLeft,
@@ -15,72 +15,83 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { Project } from "index";
 import { useRazorpay } from "react-razorpay";
 import axios from "axios";
 import { toast } from "sonner";
 import KycForm from "@/components/custom/dashboard/sub-components/KycForm";
+import { useKyc } from "@/hooks/KycContext";
+import Project from "@/types/type";
 
-const PropertyView = () => {
+// Simple in-memory cache for fetched properties
+const propertyCache = new Map<string, Project>();
+
+const PropertyView: React.FC = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [data, setData] = useState<Project | null>(null);
   const { user } = useAuth();
-  const [isKyc, setIsKyc] = useState<null | any>(undefined);
-  const [showKycDialog, setShowKycDialog] = useState(false)
-  const [investObject, setInvestObject] = useState({
+  const { kycStatus } = useKyc();
+  const [showKycDialog, setShowKycDialog] = useState<boolean>(false);
+  const [investObject, setInvestObject] = useState<{ amount: string }>({
     amount: "",
   });
   const propertyId = window.location.pathname.split("/").pop();
   const { Razorpay } = useRazorpay();
 
+  // Memoize propertyId to ensure it's stable
+  const memoizedPropertyId = useMemo(() => propertyId, [propertyId]);
+
   useEffect(() => {
+    let isCancelled = false;
+
     const fetchProjects = async () => {
+      if (!memoizedPropertyId) return;
+
+      if (propertyCache.has(memoizedPropertyId)) {
+        if (!isCancelled) {
+          setData(propertyCache.get(memoizedPropertyId) ?? null);
+          setLoading(false);
+        }
+        return;
+      }
+
       setLoading(true);
-      const { data, error } = await supabase
-        .from("property_data")
-        .select("*")
-        .eq("id", propertyId);
-      if (error) {
-        alert("error");
+      try {
+        const { data, error } = await supabase
+          .from("property_data")
+          .select("*")
+          .eq("id", memoizedPropertyId);
+
+        if (error) {
+          if (!isCancelled) toast.error("Error fetching property data");
+          console.error(error);
+          return;
+        }
+
+        if (data?.length) {
+          if (!isCancelled) {
+            setData(data[0] as Project);
+            propertyCache.set(memoizedPropertyId, data[0]);
+          }
+        } else {
+          if (!isCancelled) toast.error("No property found");
+        }
+      } catch (error) {
+        if (!isCancelled) toast.error("Unexpected error occurred");
+        console.error(error);
+      } finally {
+        if (!isCancelled) setLoading(false);
       }
-      if (data) {
-        setData(data[0]);
-      }
-      setLoading(false);
     };
 
     fetchProjects();
-  }, [propertyId, user]);
 
-  useEffect(() => {
-    const checkUserKyc = async () => {
-      if (!user?.id) return;
-
-      const { data, error } = await supabase
-        .from("user_kyc")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle(); // Because one user has one KYC record
-
-      if (error) {
-        console.error("Error fetching user KYC:", error.message);
-        setIsKyc(null);
-        return;
-      }
-      // If KYC record exists, mark as true
-      setIsKyc(data);
+    return () => {
+      isCancelled = true;
     };
-
-    checkUserKyc();
-  }, [user]);
-
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  }, [memoizedPropertyId]);
 
   async function handleBuy() {
     console.log("buy btn clicked")
@@ -146,14 +157,21 @@ const PropertyView = () => {
     razorpay.open();
   }
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  // Access first item of attributes array
+  const attributes = data?.attributes;
+
   return (
     <div className="flex min-w-full justify-center relative">
       <div className="container flex flex-col lg:flex-row h-[120vh] overflow-y-auto [&::-webkit-scrollbar]:hidden scrollbar-none items-center lg:items-start">
-        {/* left container */}
-        <div className="p-6 text-left mb-16">
+        {/* Left container */}
+        <div className="p-6 text-left mb-16 w-4/5">
           <div className="flex flex-row items-center justify-between w-full">
             <div
-              className="flex flex-row items-center px-6 py-2 mb-2 border-2 rounded-full border-alpha bg-alpha w-fit gap-x-3 hover:cursor-pointer bg-black text-white "
+              className="flex flex-row items-center px-6 py-2 mb-2 border-2 rounded-full border-alpha bg-alpha w-fit gap-x-3 hover:cursor-pointer bg-black text-white"
               onClick={() => navigate("/dashboard")}
             >
               <FontAwesomeIcon
@@ -165,7 +183,7 @@ const PropertyView = () => {
               <p className="text-sm text-beta">Back to Dashboard</p>
             </div>
             <div
-              className="flex flex-row items-center px-6 py-2 mb-2 border-2 rounded-full border-alpha bg-alpha w-fit gap-x-3 hover:cursor-pointer bg-black text-white "
+              className="flex flex-row items-center px-6 py-2 mb-2 border-2 rounded-full border-alpha bg-alpha w-fit gap-x-3 hover:cursor-pointer bg-black text-white"
               onClick={() => navigate("/dashboard/portfolio")}
             >
               <p className="text-sm text-beta">To Portfolio</p>
@@ -177,66 +195,43 @@ const PropertyView = () => {
               />
             </div>
           </div>
-          {/* name */}
-          <h1 className="mb-1 text-6xl font-bold">
-            {/* {currentProperty?.Name} */}
-            {data?.name}
-          </h1>
-          {/* description container */}
-          <div className="flex flex-col items-">
-            {/* left container */}
+          {/* Name */}
+          <h1 className="mb-1 text-6xl font-bold">{data?.name ?? "N/A"}</h1>
+          {/* Description container */}
+          <div className="flex flex-col">
             <p className="mt-2 mb-4 text-lg leading-tight text-black">
-              {/* {currentProperty.description} */}
-              {data?.description}
+              {data?.description ?? "No description available"}
             </p>
-            {/* divider */}
             <div className="px-0 mx-0 divider divider-horizontal"></div>
-            {/* right container */}
             <div className="flex justify-start py-2 mb-6 gap-y-4 gap-x-4 w-fit">
-              {/* area */}
               <div className="flex flex-row items-center w-40 p-2 pl-4 bg-white border border-black rounded-xl gap-x-4">
-                <div>
-                  <FontAwesomeIcon icon={faRulerCombined} size="xl" />
-                </div>
-                {/* <div className="divider divider-vertical"></div> */}
+                <FontAwesomeIcon icon={faRulerCombined} size="xl" />
                 <div className="flex flex-col leading-tight">
                   <p className="text-black text-md">Carbon Credits</p>
                   <p className="font-bold text-black text-md">
-                    {/* {currentProperty.Area}  */}
-                    40000
+                    {attributes?.carbonCredits ?? "N/A"}
                   </p>
                 </div>
               </div>
-
-              {/* integration date */}
               <div className="flex flex-row items-center w-40 p-2 pl-4 bg-white border border-black rounded-xl gap-x-4">
-                <div>
-                  <FontAwesomeIcon icon={faCalendarDay} size="xl" />
-                </div>
-                {/* <div className="divider divider-vertical"></div> */}
+                <FontAwesomeIcon icon={faCalendarDay} size="xl" />
                 <div className="flex flex-col leading-tight">
                   <p className="text-black text-md">Date</p>
                   <p className="font-bold text-black text-md">
-                    {/* convert currentProperty.created_at to human readable format*/}
                     {data?.created_at
                       ? new Date(data.created_at).toLocaleDateString()
-                      : ""}
-                    {/* 9/18/24 */}
+                      : "N/A"}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          {/* map container */}
+          {/* Price Chart */}
           <PriceChart
-            initialPrice={
-              //   currentProperty.JSONData.attributes.initialSharePrice
-              100
-            }
-            // currentPrice={currentProperty.priceData[0].Price}
+            initialPrice={attributes?.initialSharePrice ?? 100}
             currentPrice={data?.price ?? 0}
           />
-          {/* value parameters */}
+          {/* Value Parameters */}
           <div className="flex flex-row items-center gap-x-2">
             <h2 className="mb-0 text-xl font-bold">Value Parameters</h2>
             <div
@@ -247,8 +242,12 @@ const PropertyView = () => {
             </div>
           </div>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
-          <ValueParameter />
-          {/* highlights */}
+          {data?.value_parameters && data.value_parameters.length > 0 ? (
+            <ValueParameter parameters={data.value_parameters} />
+          ) : (
+            <p className="text-lg text-gray-500">No value parameters available</p>
+          )}
+          {/* Highlights */}
           <div className="flex flex-row items-center mt-8 gap-x-2">
             <h2 className="mb-0 text-xl font-bold">Highlights</h2>
             <div
@@ -259,9 +258,13 @@ const PropertyView = () => {
             </div>
           </div>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
-          <ViewHighlight />
-          {/* updates */}
-          <div className="flex flex-row items-center mt-8 gap-x-2">
+          {data?.Highlights && data.Highlights.length > 0 ? (
+            <ViewHighlight highlights={data.Highlights} />
+          ) : (
+            <p className="text-lg text-gray-500">No highlights available</p>
+          )}
+          {/* Updates */}
+          {/* <div className="flex flex-row items-center mt-8 gap-x-2">
             <h2 className="mb-0 text-xl font-bold">Updates</h2>
             <div
               className="tooltip tooltip-right"
@@ -271,33 +274,41 @@ const PropertyView = () => {
             </div>
           </div>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
-          <ViewPageUpdates />
+          {data?.updates && data.updates.length > 0 ? (
+            <ViewPageUpdates updates={data.updates} />
+          ) : (
+            <p className="text-lg text-gray-500">No updates available</p>
+          )} */}
+          {/* Image Gallery */}
           <h2 className="mt-8 mb-0 text-xl font-bold">Image Gallery</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
-          <div className="mb-6 bg-gray-200 rounded-lg ">
+          <div className="mb-6 bg-gray-200 rounded-lg">
+
+            {/* // uncommet below Carousel for dynamic images  */}
+            {/* <Carousel
+              className="w-min-72 storybook-fix relative"
+              list={data?.image ? [{ image: data.image, title: "Image" }] : []}
+            /> */}
             <Carousel className="w-min-72 storybook-fix relative" />
-            {/* <Expandable className="w-full min-w-72 storybook-fix" /> */}
           </div>
-          {/* location */},
+          {/* Location */}
           <h2 className="mt-8 mb-0 text-xl font-bold">Location</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
           <div className="mb-6 bg-gray-100 rounded-xl h-[30rem]">
             <Mapbox
-              location={[18.5204, 73.8567]} // Latitude and Longitude for Pune, Maharashtra
-              name={data?.location ?? ""} // You can change this to any other name you want to display
+              location={data?.location ? getCoordinates(data.location) : [18.5204, 73.8567]}
+              name={data?.location ?? "Unknown Location"}
             />
           </div>
-          {/* documents */}
+          {/* Documents */}
           <h2 className="mt-8 mb-0 text-xl font-bold">Documents</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
           <div className="">
             <div className="grid grid-cols-2 gap-4 text-left">
-              {[
-                "Property Deed",
-                "Sale Agreement",
-                "Ownership Transfer Certificate",
-                "Inspection Report",
-              ].map((doc, index) => (
+              {(data?.Documents && data.Documents.length > 0
+                ? data.Documents
+                : ["No documents available"]
+              ).map((doc, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-start p-2 px-6 text-lg text-center bg-gray-200 rounded-lg"
@@ -321,133 +332,76 @@ const PropertyView = () => {
           </div>
         </div>
 
-        {/* right container  */}
+        {/* Right container */}
         <div className="w-full p-6 md:w-[40rem] md:sticky md:top-0 lg:h-screen flex flex-col gap-y-4 pb-20 lg:pb-0">
-          {/* token metadata container */}
-          <div className="flex flex-col items-start p-8 bg-white rounded-3xl justify-center invest-shadow shadow-2xl  shadow-black">
-            {/* header */}
-            <div className="">
+          <div className="flex flex-col items-start p-8 bg-white rounded-3xl justify-center invest-shadow shadow-2xl shadow-black">
+            <div>
               <p className="text-2xl font-bold">Token Metadata</p>
             </div>
-            {/* data container */}
             <div className="flex flex-col w-full mt-2 gap-y-0">
-              {/* token address container */}
               <div className="flex flex-row items-center justify-between w-full">
                 <p className="text-black text-md">Token Address</p>
                 <div className="flex flex-row items-center text-sm gap-x-3">
-                  <div className="flex flex-row items-center gap-x-1">
-                    <FontAwesomeIcon
-                      icon={faCopy}
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          // currentProperty.TokenAddress
-                          "Token Address"
-                        );
-                      }}
-                    />
-                  </div>
+                  <FontAwesomeIcon
+                    icon={faCopy}
+                    onClick={() => {
+                      navigator.clipboard.writeText("Token Address");
+                    }}
+                  />
                 </div>
               </div>
-
-              {/* owner address container */}
               <div className="flex flex-row items-center justify-between w-full">
                 <p className="text-black text-md">Owner Address</p>
                 <div className="flex flex-row items-center text-sm gap-x-3">
-                  <div className="flex flex-row items-center gap-x-1">
-                    <FontAwesomeIcon
-                      icon={faCopy}
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          // currentProperty.collectionMetadata.metadata
-                          "Owner address"
-                          // .updateAuthority
-                        );
-                      }}
-                    />
-                  </div>
+                  <FontAwesomeIcon
+                    icon={faCopy}
+                    onClick={() => {
+                      navigator.clipboard.writeText("Owner address");
+                    }}
+                  />
                 </div>
               </div>
-
-              {/* current status */}
               <div className="flex flex-row items-center justify-between w-full">
                 <p className="text-black text-md">Current Status</p>
-                <div className="flex flex-row items-center text-md gap-x-3">
-                  <div className="flex flex-row items-center gap-x-1">
-                    <p className="text-black ">
-                      {/* {currentProperty.Status.charAt(0).toUpperCase() +
-                currentProperty.Status.slice(1)} */}
-                      {data?.status}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-black">{data?.status ?? "N/A"}</p>
               </div>
-
-              {/* symbol */}
               <div className="flex flex-row items-center justify-between w-full">
                 <p className="text-black text-md">NFT Symbol</p>
-                <div className="flex flex-row items-center text-md gap-x-3">
-                  <div className="flex flex-row items-center gap-x-1">
-                    <p className="text-black ">
-                      {/* {currentProperty.collectionMetadata.metadata.symbol} */}
-                      Sunfar
-                    </p>
-                  </div>
-                </div>
+                <p className="text-black">{attributes?.nftSymbol ?? "Sunfar"}</p>
               </div>
             </div>
-
-            {/* divider */}
             <div className="py-3 my-0 divider before:bg-black/5 after:bg-black/5"></div>
-
-            {/* number stats container */}
             <div className="grid w-full grid-cols-4 mt-0 gap-y-3">
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Owners</p>
-                {/* <p className="text-2xl font-bold">
-          {
-            extractUniqueAddresses(currentProperty.transactions)
-              .length
-          }
-        </p> */}
+                <p className="text-2xl font-bold">{attributes?.owners ?? "N/A"}</p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">IRR</p>
-                <p className="text-2xl font-bold">
-                  {/* {currentProperty.IRR}% */}
-                  11.1%
-                </p>
+                <p className="text-2xl font-bold">{attributes?.irr ?? "11.1%"}</p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">ARR</p>
-                <p className="text-2xl font-bold">
-                  {/* {currentProperty.ARR}% */}
-                  9%
-                </p>
+                <p className="text-2xl font-bold">{attributes?.arr ?? "9%"}</p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Share Per NFT</p>
                 <p className="text-2xl font-bold">
-                  {/* {currentProperty.JSONData.attributes.sharePerNFT.toFixed(
-            4
-          )} */}
-                  {data?.attributes?.sharePerNFT}%{/* 0.0159% */}
+                  {attributes?.sharePerNFT ? `${attributes.sharePerNFT}%` : "N/A"}
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Total Shares</p>
                 <p className="text-2xl font-bold">
-                  {/* {currentProperty.JSONData.attributes
-            .initialPropertyValue /
-            currentProperty.JSONData.attributes.initialSharePrice} */}
-                  {/* 6300 */}
-                  {data?.attributes?.initialPropertyValue}
+                  {attributes?.initialPropertyValue ?? "N/A"}
                 </p>
               </div>
-              <div className="flex flex-col center items-center justify-center">
+              <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Initial Price</p>
                 <p className="text-2xl font-bold">
-                  {/* ${currentProperty.JSONData.attributes.initialSharePrice} */}
-                  ${data?.attributes?.initialSharePrice}
+                  {attributes?.initialSharePrice
+                    ? `$${attributes.initialSharePrice}`
+                    : "N/A"}
                 </p>
               </div>
             </div>
@@ -457,77 +411,51 @@ const PropertyView = () => {
               <div>
                 <p className="text-lg text-left text-black">Current Value</p>
                 <p className="text-4xl font-bold">
-                  $
-                  {/* {currentProperty.priceData[0].Price
-            ? Math.round(
-                currentProperty.priceData[0].Price * totalShares
-              ).toLocaleString("en-US")
-            : "$0"}{" "} */}
-                  630,000
+                  {data?.price && attributes?.initialPropertyValue
+                    ? `$${(data.price * attributes.initialPropertyValue).toLocaleString(
+                      "en-US"
+                    )}`
+                    : "$0"}
                   <span className="text-sm font-normal text-black">USD</span>
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-lg text-black">Original Value</p>
                 <p className="text-4xl font-bold">
-                  $
-                  {/* {Math.round(
-            currentProperty.JSONData.attributes
-              .initialPropertyValue
-          ).toLocaleString("en-US")}{" "} */}
-                  630,000
+                  {attributes?.initialPropertyValue
+                    ? `$${attributes.initialPropertyValue.toLocaleString("en-US")}`
+                    : "$0"}
                   <span className="text-sm font-normal text-black">USD</span>
                 </p>
               </div>
             </div>
-
             <div className="items-center justify-center px-6 py-4 pb-6 my-5 mb-4 gap-y-4 rounded-2xl bg-black/10">
               <div className="flex flex-row items-center justify-between text-lg">
                 <p className="">Invested</p>
                 <p className="">
-                  $&nbsp;
-                  {/* {currentProperty.launchpadData[0].Raised} */}
-                  {/* {(currentProperty.launchpadData.Raised &&
-          currentProperty.launchpadData.Raised.toLocaleString(
-            "en-US"
-          )) ||
-          0} */}
-                  <span>&nbsp;USDC</span>
+                  {attributes?.invested
+                    ? `$${attributes.invested.toLocaleString("en-US")}`
+                    : "$0"}
+                  <span> USDC</span>
                 </p>
               </div>
-              <div className="h-2 mt-2 mb-2 bg-gray-200 rounded-full">
-              </div>
+              <div className="h-2 mt-2 mb-2 bg-gray-200 rounded-full"></div>
             </div>
-
             <div className="flex justify-between mb-4">
               <div>
                 <p className="text-lg text-left text-black">Share Price</p>
                 <p className="text-3xl font-semibold text-left">
-                  $
-                  {/* {currentProperty.priceData[0].Price
-            ? currentProperty.priceData[0].Price.toFixed(1)
-            : "0.00"}{" "} */}
-                  100
+                  {data?.price ? `$${data.price.toFixed(1)}` : "$0.00"}
                   <span className="text-sm font-normal text-black">USDC</span>
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-lg text-black">Available Shares</p>
-                <p className="text-3xl font-semibold">
-                  {/* {availableShares} */}
-                  6256
-                  {/* <span className="text-sm font-normal text-black">
-          USDC
-        </span> */}
-                </p>
+                <p className="text-3xl font-semibold">{data?.available_shares ?? "N/A"}</p>
               </div>
             </div>
-
             <div className="mb-4">
-              <p className="mb-1 text-lg text-black">
-                {/* Your Balance: {solBalance.toLocaleString()} USDC */}
-                Your Balance: 0 USDC
-              </p>
+              <p className="mb-1 text-lg text-black">Your Balance: 0 USDC</p>
               <input
                 type="text"
                 placeholder="Enter amount of shares to buy"
@@ -541,41 +469,62 @@ const PropertyView = () => {
                 }}
               />
             </div>
-
-            {user && isKyc ? (
+            {user ? (
               <>
-                {isKyc.status === true ? (
+                {loading ? (
+                  <button
+                    disabled
+                    className="w-full py-2 mb-4 text-lg font-normal text-white bg-gray-400 border-2 border-gray-400 rounded-xl cursor-not-allowed"
+                  >
+                    <p>Checking KYC status...</p>
+                  </button>
+                ) : kycStatus === true ? (
                   <button
                     className="w-full py-2 mb-4 text-lg font-normal text-white bg-black border-2 border-black rounded-xl hover:bg-white hover:text-black"
                     onClick={async () => await handleBuy()}
                   >
                     <p>Invest Now with USDC</p>
                   </button>
-                ) : (
+                ) : kycStatus === false ? (
                   <button
-                    // disabled
-                    onClick={() => setShowKycDialog(true)}
-                    className="w-full py-2 mb-4 text-lg font-normal text-white bg-green-500 border-2 hover:bg-green-500/80 rounded-xl cursor-pointer"
+                    disabled
+                    className="w-full py-2 mb-4 text-lg font-normal text-white bg-green-500 border-2 border-green-500 rounded-xl cursor-not-allowed hover:bg-green-500/80"
                   >
                     <p>Your KYC is under process</p>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowKycDialog(true)}
+                    className="w-full py-2 mb-4 text-lg font-normal text-white bg-red-500 border-2 border-red-500 rounded-xl hover:bg-red-500/80 hover:text-white hover:underline"
+                  >
+                    <p>Complete KYC to invest</p>
                   </button>
                 )}
               </>
             ) : (
               <button
-                className="w-full py-2 mb-4 text-lg font-normal text-white bg-red-500 border-2 border-red-500 rounded-xl hover:bg-red-500/80 hover:text-white hover:underline"
                 onClick={() => setShowKycDialog(true)}
+                className="w-full py-2 mb-4 text-lg font-normal text-white bg-blue-500 border-2 border-blue-500 rounded-xl hover:bg-blue-500/80 hover:text-white hover:underline"
               >
-                <p>Complete KYC to invest</p>
+                <p>Login to start investing</p>
               </button>
             )}
-
           </div>
         </div>
         <KycForm open={showKycDialog} onOpenChange={setShowKycDialog} />
       </div>
     </div>
   );
+};
+
+// Helper function to map location to coordinates
+const getCoordinates = (location: string): [number, number] => {
+  const locationMap: { [key: string]: [number, number] } = {
+    "Sydney, Australia": [-33.8688, 151.2093],
+    "Pune, Maharashtra": [18.5204, 73.8567],
+    "Mumbai": [19.0760, 72.8777],
+  };
+  return locationMap[location] || [18.5204, 73.8567]; // Default to Pune
 };
 
 export default PropertyView;
