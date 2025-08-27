@@ -1,6 +1,6 @@
 import Carousel from "@/components/animata/Carousel";
-import PriceChart from "@/components/custom/charts/PriceChart";
-import Mapbox from "@/components/custom/Mapbox";
+// import PriceChart from "@/components/custom/charts/PriceChart";
+// import Mapbox from "@/components/custom/Mapbox";
 import ValueParameter from "@/components/custom/ValueParameter";
 import ViewHighlight from "@/components/custom/ViewHighlight";
 // import ViewPageUpdates from "@/components/custom/ViewPageUpdates";
@@ -13,7 +13,7 @@ import {
   faRulerCombined,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/AuthContext";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
@@ -39,6 +39,7 @@ const PropertyView: React.FC = () => {
   });
   const propertyId = window.location.pathname.split("/").pop();
   const { Razorpay } = useRazorpay();
+  const currentRoute = useLocation();
 
   // Memoize propertyId to ensure it's stable
   const memoizedPropertyId = useMemo(() => propertyId, [propertyId]);
@@ -166,7 +167,7 @@ const PropertyView: React.FC = () => {
 
   return (
     <div className="flex min-w-full justify-center relative">
-      <div className="container flex flex-col lg:flex-row h-[120vh] overflow-y-auto [&::-webkit-scrollbar]:hidden scrollbar-none items-center lg:items-start">
+      <div className="container flex flex-col lg:flex-row items-center lg:items-start">
         {/* Left container */}
         <div className="p-6 text-left mb-16 w-4/5">
           <div className="flex flex-row items-center justify-between w-full">
@@ -184,9 +185,9 @@ const PropertyView: React.FC = () => {
             </div>
             <div
               className="flex flex-row items-center px-6 py-2 mb-2 border-2 rounded-full border-alpha bg-alpha w-fit gap-x-3 hover:cursor-pointer bg-black text-white"
-              onClick={() => navigate("/dashboard/portfolio")}
+              onClick={() => navigate(`${currentRoute.pathname}/status`)}
             >
-              <p className="text-sm text-beta">To Portfolio</p>
+              <p className="text-sm text-beta">To Status</p>
               <FontAwesomeIcon
                 icon={faChevronRight}
                 color="#000000"
@@ -226,11 +227,7 @@ const PropertyView: React.FC = () => {
               </div>
             </div>
           </div>
-          {/* Price Chart */}
-          <PriceChart
-            initialPrice={attributes?.initialSharePrice ?? 100}
-            currentPrice={data?.price ?? 0}
-          />
+          
           {/* Value Parameters */}
           <div className="flex flex-row items-center gap-x-2">
             <h2 className="mb-0 text-xl font-bold">Value Parameters</h2>
@@ -263,43 +260,23 @@ const PropertyView: React.FC = () => {
           ) : (
             <p className="text-lg text-gray-500">No highlights available</p>
           )}
-          {/* Updates */}
-          {/* <div className="flex flex-row items-center mt-8 gap-x-2">
-            <h2 className="mb-0 text-xl font-bold">Updates</h2>
-            <div
-              className="tooltip tooltip-right"
-              data-tip="Recent changes or events that impact the property's appeal or value."
-            >
-              <FontAwesomeIcon icon={faCircleInfo} />
-            </div>
-          </div>
-          <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
-          {data?.updates && data.updates.length > 0 ? (
-            <ViewPageUpdates updates={data.updates} />
-          ) : (
-            <p className="text-lg text-gray-500">No updates available</p>
-          )} */}
+
           {/* Image Gallery */}
           <h2 className="mt-8 mb-0 text-xl font-bold">Image Gallery</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
           <div className="mb-6 bg-gray-200 rounded-lg">
-
-            {/* // uncommet below Carousel for dynamic images  */}
-            {/* <Carousel
-              className="w-min-72 storybook-fix relative"
-              list={data?.image ? [{ image: data.image, title: "Image" }] : []}
-            /> */}
             <Carousel className="w-min-72 storybook-fix relative" />
           </div>
           {/* Location */}
-          <h2 className="mt-8 mb-0 text-xl font-bold">Location</h2>
+          {/* <h2 className="mt-8 mb-0 text-xl font-bold">Location</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
           <div className="mb-6 bg-gray-100 rounded-xl h-[30rem]">
             <Mapbox
               location={data?.location ? getCoordinates(data.location) : [18.5204, 73.8567]}
               name={data?.location ?? "Unknown Location"}
             />
-          </div>
+          </div> */}
+
           {/* Documents */}
           <h2 className="mt-8 mb-0 text-xl font-bold">Documents</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
@@ -518,13 +495,13 @@ const PropertyView: React.FC = () => {
 };
 
 // Helper function to map location to coordinates
-const getCoordinates = (location: string): [number, number] => {
-  const locationMap: { [key: string]: [number, number] } = {
-    "Sydney, Australia": [-33.8688, 151.2093],
-    "Pune, Maharashtra": [18.5204, 73.8567],
-    "Mumbai": [19.0760, 72.8777],
-  };
-  return locationMap[location] || [18.5204, 73.8567]; // Default to Pune
-};
+// const getCoordinates = (location: string): [number, number] => {
+//   const locationMap: { [key: string]: [number, number] } = {
+//     "Sydney, Australia": [-33.8688, 151.2093],
+//     "Pune, Maharashtra": [18.5204, 73.8567],
+//     "Mumbai": [19.0760, 72.8777],
+//   };
+//   return locationMap[location] || [18.5204, 73.8567]; // Default to Pune
+// };
 
 export default PropertyView;
