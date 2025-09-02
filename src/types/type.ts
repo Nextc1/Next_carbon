@@ -58,5 +58,6 @@ export default interface Project {
   growth: string | null;
   Project_Parameters: Record<string, unknown> | null;
   Highlights: any[] | null;
+  totalShares: number | null;
   Documents: string[] | null;
 }
