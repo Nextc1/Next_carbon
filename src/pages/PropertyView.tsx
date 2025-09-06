@@ -38,7 +38,6 @@ const PropertyView: React.FC = () => {
     direction: 'up' | 'down' | null;
     percentage: number | null;
   }>({ direction: null, percentage: null });
-  const [isConnected, setIsConnected] = useState<boolean>(false);
   const propertyId = window.location.pathname.split("/").pop();
   const { Razorpay } = useRazorpay();
   const currentRoute = useLocation();
@@ -165,9 +164,7 @@ const PropertyView: React.FC = () => {
           }
         }
       )
-      .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED');
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(propertyChannel);
