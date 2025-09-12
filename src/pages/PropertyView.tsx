@@ -1,9 +1,6 @@
 import Carousel from "@/components/animata/Carousel";
-import PriceChart from "@/components/custom/charts/PriceChart";
-import Mapbox from "@/components/custom/Mapbox";
 import ValueParameter from "@/components/custom/ValueParameter";
 import ViewHighlight from "@/components/custom/ViewHighlight";
-// import ViewPageUpdates from "@/components/custom/ViewPageUpdates";
 import {
   faCalendarDay,
   faChevronLeft,
@@ -13,7 +10,7 @@ import {
   faRulerCombined,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/AuthContext";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
@@ -37,8 +34,13 @@ const PropertyView: React.FC = () => {
   const [investObject, setInvestObject] = useState<{ amount: string }>({
     amount: "",
   });
+  const [priceChange, setPriceChange] = useState<{
+    direction: 'up' | 'down' | null;
+    percentage: number | null;
+  }>({ direction: null, percentage: null });
   const propertyId = window.location.pathname.split("/").pop();
   const { Razorpay } = useRazorpay();
+  const currentRoute = useLocation();
 
   // Memoize propertyId to ensure it's stable
   const memoizedPropertyId = useMemo(() => propertyId, [propertyId]);
@@ -90,6 +92,82 @@ const PropertyView: React.FC = () => {
 
     return () => {
       isCancelled = true;
+    };
+  }, [memoizedPropertyId]);
+
+  // Real-time subscription for property updates
+  useEffect(() => {
+    if (!memoizedPropertyId) return;
+
+    const propertyChannel = supabase
+      .channel(`property_${memoizedPropertyId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'property_data',
+          filter: `id=eq.${memoizedPropertyId}`,
+        },
+        (payload) => {
+
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            const updatedProperty = payload.new as Project;
+            setData(updatedProperty);
+            propertyCache.set(memoizedPropertyId, updatedProperty);
+
+            // Show toast notification for price changes
+            if (payload.old && (payload.old as Project).price !== updatedProperty.price) {
+              const oldPrice = (payload.old as Project).price;
+              const newPrice = updatedProperty.price;
+
+              if (oldPrice && newPrice) {
+                const changePercent = ((newPrice - oldPrice) / oldPrice * 100);
+
+                // Set price change state for visual indicator
+                setPriceChange({
+                  direction: newPrice > oldPrice ? 'up' : 'down',
+                  percentage: changePercent
+                });
+
+                // Clear the price change indicator after 3 seconds
+                setTimeout(() => {
+                  setPriceChange({ direction: null, percentage: null });
+                }, 3000);
+              }
+            }
+
+            // Show toast notification for shares changes
+            if (payload.old && (payload.old as Project).available_shares !== updatedProperty.available_shares) {
+              const oldShares = (payload.old as Project).available_shares;
+              const newShares = updatedProperty.available_shares;
+
+              if (oldShares !== undefined && newShares !== undefined && oldShares !== null && newShares !== null) {
+                const sharesSold = oldShares - newShares;
+                if (sharesSold > 0) {
+                  toast.success(
+                    `🎉 ${sharesSold.toLocaleString()} shares sold! ${newShares.toLocaleString()} remaining.`,
+                    {
+                      duration: 5000,
+                      position: 'top-right',
+                      style: {
+                        background: '#10b981',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                      },
+                    }
+                  );
+                }
+              }
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(propertyChannel);
     };
   }, [memoizedPropertyId]);
 
@@ -166,7 +244,7 @@ const PropertyView: React.FC = () => {
 
   return (
     <div className="flex min-w-full justify-center relative">
-      <div className="container flex flex-col lg:flex-row h-[120vh] overflow-y-auto [&::-webkit-scrollbar]:hidden scrollbar-none items-center lg:items-start">
+      <div className="container flex flex-col lg:flex-row items-center lg:items-start">
         {/* Left container */}
         <div className="p-6 text-left mb-16 w-4/5">
           <div className="flex flex-row items-center justify-between w-full">
@@ -184,9 +262,9 @@ const PropertyView: React.FC = () => {
             </div>
             <div
               className="flex flex-row items-center px-6 py-2 mb-2 border-2 rounded-full border-alpha bg-alpha w-fit gap-x-3 hover:cursor-pointer bg-black text-white"
-              onClick={() => navigate("/dashboard/portfolio")}
+              onClick={() => navigate(`${currentRoute.pathname}/status`)}
             >
-              <p className="text-sm text-beta">To Portfolio</p>
+              <p className="text-sm text-beta">To Status</p>
               <FontAwesomeIcon
                 icon={faChevronRight}
                 color="#000000"
@@ -226,11 +304,7 @@ const PropertyView: React.FC = () => {
               </div>
             </div>
           </div>
-          {/* Price Chart */}
-          <PriceChart
-            initialPrice={attributes?.initialSharePrice ?? 100}
-            currentPrice={data?.price ?? 0}
-          />
+
           {/* Value Parameters */}
           <div className="flex flex-row items-center gap-x-2">
             <h2 className="mb-0 text-xl font-bold">Value Parameters</h2>
@@ -263,43 +337,14 @@ const PropertyView: React.FC = () => {
           ) : (
             <p className="text-lg text-gray-500">No highlights available</p>
           )}
-          {/* Updates */}
-          {/* <div className="flex flex-row items-center mt-8 gap-x-2">
-            <h2 className="mb-0 text-xl font-bold">Updates</h2>
-            <div
-              className="tooltip tooltip-right"
-              data-tip="Recent changes or events that impact the property's appeal or value."
-            >
-              <FontAwesomeIcon icon={faCircleInfo} />
-            </div>
-          </div>
-          <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
-          {data?.updates && data.updates.length > 0 ? (
-            <ViewPageUpdates updates={data.updates} />
-          ) : (
-            <p className="text-lg text-gray-500">No updates available</p>
-          )} */}
+
           {/* Image Gallery */}
           <h2 className="mt-8 mb-0 text-xl font-bold">Image Gallery</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
           <div className="mb-6 bg-gray-200 rounded-lg">
-
-            {/* // uncommet below Carousel for dynamic images  */}
-            {/* <Carousel
-              className="w-min-72 storybook-fix relative"
-              list={data?.image ? [{ image: data.image, title: "Image" }] : []}
-            /> */}
             <Carousel className="w-min-72 storybook-fix relative" />
           </div>
-          {/* Location */}
-          <h2 className="mt-8 mb-0 text-xl font-bold">Location</h2>
-          <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
-          <div className="mb-6 bg-gray-100 rounded-xl h-[30rem]">
-            <Mapbox
-              location={data?.location ? getCoordinates(data.location) : [18.5204, 73.8567]}
-              name={data?.location ?? "Unknown Location"}
-            />
-          </div>
+
           {/* Documents */}
           <h2 className="mt-8 mb-0 text-xl font-bold">Documents</h2>
           <div className="pt-3 pb-4 my-0 divider before:bg-black/10 after:bg-black/10"></div>
@@ -334,8 +379,8 @@ const PropertyView: React.FC = () => {
 
         {/* Right container */}
         <div className="w-full p-6 md:w-[40rem] md:sticky md:top-0 lg:h-screen flex flex-col gap-y-4 pb-20 lg:pb-0">
-          <div className="flex flex-col items-start p-8 bg-white rounded-3xl justify-center invest-shadow shadow-2xl shadow-black">
-            <div>
+          <div className="flex flex-col items-start p-6 bg-white rounded-3xl justify-center invest-shadow shadow-2xl shadow-black">
+            <div className="flex items-center justify-between w-full">
               <p className="text-2xl font-bold">Token Metadata</p>
             </div>
             <div className="flex flex-col w-full mt-2 gap-y-0">
@@ -371,37 +416,35 @@ const PropertyView: React.FC = () => {
               </div>
             </div>
             <div className="py-3 my-0 divider before:bg-black/5 after:bg-black/5"></div>
-            <div className="grid w-full grid-cols-4 mt-0 gap-y-3">
+            <div className="grid w-full grid-cols-4 mt-0 ">
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Owners</p>
-                <p className="text-2xl font-bold">{attributes?.owners ?? "N/A"}</p>
+                <p className="text-xl font-semibold">{attributes?.owners ?? "N/A"}</p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">IRR</p>
-                <p className="text-2xl font-bold">{attributes?.irr ?? "11.1%"}</p>
+                <p className="text-xl font-semibold">{attributes?.irr ?? "11.1%"}</p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">ARR</p>
-                <p className="text-2xl font-bold">{attributes?.arr ?? "9%"}</p>
+                <p className="text-xl font-semibold">{attributes?.arr ?? "9%"}</p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Share Per NFT</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xl font-semibold">
                   {attributes?.sharePerNFT ? `${attributes.sharePerNFT}%` : "N/A"}
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Total Shares</p>
-                <p className="text-2xl font-bold">
-                  {attributes?.initialPropertyValue ?? "N/A"}
+                <p className="text-xl font-semibold">
+                  {data?.totalShares ?? "N/A"}
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center">
-                <p className="text-black text-md">Initial Price</p>
-                <p className="text-2xl font-bold">
-                  {attributes?.initialSharePrice
-                    ? `$${attributes.initialSharePrice}`
-                    : "N/A"}
+                <p className="text-black text-md">Share Price</p>
+                <p className="text-xl font-semibold">
+                  {data?.price ?? "N/A"}
                 </p>
               </div>
             </div>
@@ -409,49 +452,119 @@ const PropertyView: React.FC = () => {
           <div className="p-8 bg-white rounded-3xl invest-shadow shadow-2xl shadow-black">
             <div className="flex justify-between mb-4">
               <div>
-                <p className="text-lg text-left text-black">Current Value</p>
-                <p className="text-4xl font-bold">
-                  {data?.price && attributes?.initialPropertyValue
-                    ? `$${(data.price * attributes.initialPropertyValue).toLocaleString(
+                <div className="flex items-center gap-2">
+                  <p className="text-lg text-left text-black">Available Value</p>
+                </div>
+                <p className={`text-xl font-bold transition-colors duration-300 ${priceChange.direction === 'up' ? 'text-green-600' :
+                  priceChange.direction === 'down' ? 'text-red-600' :
+                    'text-black'
+                  }`}>
+                  {data?.price && data?.available_shares
+                    ? `$${(data.price * data.available_shares).toLocaleString(
                       "en-US"
                     )}`
                     : "$0"}
-                  <span className="text-sm font-normal text-black">USD</span>
+                  <span className="text-sm font-normal ml-0.5 text-black">USD</span>
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-lg text-black">Original Value</p>
-                <p className="text-4xl font-bold">
-                  {attributes?.initialPropertyValue
-                    ? `$${attributes.initialPropertyValue.toLocaleString("en-US")}`
-                    : "$0"}
-                  <span className="text-sm font-normal text-black">USD</span>
+                <p className="text-lg text-black">Total Value</p>
+                <p className="text-xl font-bold">
+                  {`$${((data?.totalShares ?? 0) * (data?.price ?? 0)).toLocaleString(
+                    "en-US"
+                  )}`}
+                  <span className="text-sm font-normal ml-0.5 text-black">USD</span>
                 </p>
               </div>
             </div>
-            <div className="items-center justify-center px-6 py-4 pb-6 my-5 mb-4 gap-y-4 rounded-2xl bg-black/10">
-              <div className="flex flex-row items-center justify-between text-lg">
-                <p className="">Invested</p>
-                <p className="">
-                  {attributes?.invested
-                    ? `$${attributes.invested.toLocaleString("en-US")}`
-                    : "$0"}
-                  <span> USDC</span>
-                </p>
+
+            {/* Shares Distribution Bar */}
+            <div className="p-3 mb-4 rounded-2xl bg-gray-50 border-2 border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-black">Shares Distribution</h3>
+                  {/* <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                    <span className="text-xs text-gray-500">LIVE</span>
+                  </div> */}
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600">Sold</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span className="text-gray-600">Available</span>
+                  </div>
+                </div>
               </div>
-              <div className="h-2 mt-2 mb-2 bg-gray-200 rounded-full"></div>
+
+              <div className="mb-3">
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Sold: {((data?.totalShares ?? 0) - (data?.available_shares ?? 0)).toLocaleString()}</span>
+                  <span>Available: {(data?.available_shares ?? 0).toLocaleString()}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                  <div className="flex h-full">
+                    {/* Sold shares (green) */}
+                    <div
+                      className="bg-green-500 h-full transition-all duration-500 ease-in-out"
+                      style={{
+                        width: `${data?.totalShares ? ((data.totalShares - (data.available_shares ?? 0)) / data.totalShares * 100) : 0}%`
+                      }}
+                    ></div>
+                    {/* Available shares (blue) */}
+                    <div
+                      className="bg-blue-500 h-full transition-all duration-500 ease-in-out"
+                      style={{
+                        width: `${data?.totalShares ? ((data.available_shares ?? 0) / data.totalShares * 100) : 0}%`
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <div className="text-center">
+                  <p className="font-semibold text-green-600">
+                    {data?.totalShares ? (((data.totalShares - (data.available_shares ?? 0)) / data.totalShares * 100)).toFixed(1) : 0}%
+                  </p>
+                  <p className="text-gray-500">Sold</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold text-blue-600">
+                    {data?.totalShares ? (((data.available_shares ?? 0) / data.totalShares * 100)).toFixed(1) : 0}%
+                  </p>
+                  <p className="text-gray-500">Available</p>
+                </div>
+              </div>
             </div>
             <div className="flex justify-between mb-4">
               <div>
-                <p className="text-lg text-left text-black">Share Price</p>
-                <p className="text-3xl font-semibold text-left">
-                  {data?.price ? `$${data.price.toFixed(1)}` : "$0.00"}
-                  <span className="text-sm font-normal text-black">USDC</span>
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg text-left text-black">Share Price</p>
+                  {/* <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${priceChange.direction === 'up' ? 'bg-green-500 animate-pulse' : priceChange.direction === 'down' ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                    <span className="text-xs text-gray-500">LIVE</span>
+                  </div> */}
+                </div>
+                <div className="flex items-end justify-center gap-1">
+                  <p className={`text-xl font-semibold`}>
+                    {data?.price ? `$${data.price.toFixed(1)}` : "$0.00"}
+                  </p>
+                  {/* {priceChange.percentage && (
+                    <span className={`text-sm font-medium ${priceChange.direction === 'up' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                      {priceChange.direction === 'up' ? '+' : ''}{priceChange.percentage.toFixed(2)}%
+                    </span>
+                  )} */}
+                  <p className="text-sm font-normal text-black"> USDC</p>
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-lg text-black">Available Shares</p>
-                <p className="text-3xl font-semibold">{data?.available_shares ?? "N/A"}</p>
+                <p className="text-xl font-semibold">{data?.available_shares ?? "N/A"}</p>
               </div>
             </div>
             <div className="mb-4">
@@ -518,13 +631,13 @@ const PropertyView: React.FC = () => {
 };
 
 // Helper function to map location to coordinates
-const getCoordinates = (location: string): [number, number] => {
-  const locationMap: { [key: string]: [number, number] } = {
-    "Sydney, Australia": [-33.8688, 151.2093],
-    "Pune, Maharashtra": [18.5204, 73.8567],
-    "Mumbai": [19.0760, 72.8777],
-  };
-  return locationMap[location] || [18.5204, 73.8567]; // Default to Pune
-};
+// const getCoordinates = (location: string): [number, number] => {
+//   const locationMap: { [key: string]: [number, number] } = {
+//     "Sydney, Australia": [-33.8688, 151.2093],
+//     "Pune, Maharashtra": [18.5204, 73.8567],
+//     "Mumbai": [19.0760, 72.8777],
+//   };
+//   return locationMap[location] || [18.5204, 73.8567]; // Default to Pune
+// };
 
 export default PropertyView;
