@@ -28,7 +28,6 @@ export default function CreatePropertyForm() {
     updates: updates,
     attributes: {
       sharePerNFT: 0,
-      propertyType: "",
       initialSharePrice: 0,
       initialPropertyValue: 0,
     },
@@ -115,7 +114,6 @@ export default function CreatePropertyForm() {
       updates: [],
       attributes: {
         sharePerNFT: 0,
-        propertyType: "",
         initialSharePrice: 0,
         initialPropertyValue: 0,
       },
@@ -227,17 +225,6 @@ export default function CreatePropertyForm() {
                     onChange={(e) => setFormData(prev => ({
                       ...prev,
                       attributes: { ...prev.attributes, initialPropertyValue: Number(e.target.value) }
-                    }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="propertyType">Property Type</Label>
-                  <Input
-                    name="propertyType"
-                    value={formData.attributes.propertyType}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      attributes: { ...prev.attributes, propertyType: e.target.value }
                     }))}
                   />
                 </div>
