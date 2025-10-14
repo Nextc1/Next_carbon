@@ -5,7 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -26,6 +34,7 @@ interface PropertyData {
   image: string | File;
   progress: ProgressItem[];
   updates: Update[];
+  Highlights: Highlight[];
   attributes: {
     sharePerNFT: number;
     initialSharePrice: number;
@@ -39,9 +48,13 @@ interface PropertyData {
   created_at: string;
 }
 
+type Highlight = { highlight: string };
+
 const ManageProperty = () => {
   const [properties, setProperties] = useState<PropertyData[]>([]);
-  const [selectedProperty, setSelectedProperty] = useState<PropertyData | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyData | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [loading, setLoading] = useState(false);
@@ -62,26 +75,48 @@ const ManageProperty = () => {
         throw error;
       }
 
-      console.log("Raw properties data from database:", data);
+      // console.log("Raw properties data from database:", data);
 
-      // Parse JSON fields
-      const parsedData = data.map(property => ({
-        ...property,
-        progress: Array.isArray(property.progress) ? property.progress : [],
-        updates: Array.isArray(property.updates) ? property.updates : [],
-        attributes: Array.isArray(property.attributes) && property.attributes.length > 0 
-          ? property.attributes[0] 
-          : { sharePerNFT: 0, initialSharePrice: 0, initialPropertyValue: 0 },
-        value_parameters: Array.isArray(property.value_parameters) && property.value_parameters.length > 0
-          ? property.value_parameters[0]
-          : { roi: 0, appreciation: 0, rentalYield: 0 }
-      }));
+      // Parse JSON fields robustly (handle arrays, objects, or null)
+      const parsedData = data.map((property) => {
+        const defaultAttributes = {
+          sharePerNFT: 0,
+          initialSharePrice: 0,
+          initialPropertyValue: 0,
+        };
+        const defaultValueParams = { roi: 0, appreciation: 0, rentalYield: 0 };
+
+        const attributes = Array.isArray(property.attributes)
+          ? property.attributes[0] ?? defaultAttributes
+          : property.attributes && typeof property.attributes === "object"
+          ? property.attributes
+          : defaultAttributes;
+
+        const valueParameters = Array.isArray(property.value_parameters)
+          ? property.value_parameters[0] ?? defaultValueParams
+          : property.value_parameters &&
+            typeof property.value_parameters === "object"
+          ? property.value_parameters
+          : defaultValueParams;
+
+        return {
+          ...property,
+          progress: Array.isArray(property.progress) ? property.progress : [],
+          updates: Array.isArray(property.updates) ? property.updates : [],
+          Highlights: Array.isArray(property.Highlights)
+            ? property.Highlights
+            : [],
+          attributes,
+          value_parameters: valueParameters,
+        };
+      });
 
       console.log("Parsed properties data:", parsedData);
       setProperties(parsedData);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching properties:", error);
-      toast.error("Failed to fetch properties");
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to fetch properties: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -92,11 +127,13 @@ const ManageProperty = () => {
   }, []);
 
   // Filter properties based on search and status
-  const filteredProperties = properties.filter(property => {
-    const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || property.status === statusFilter;
+  const filteredProperties = properties.filter((property) => {
+    const matchesSearch =
+      property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.type.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || property.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -107,10 +144,12 @@ const ManageProperty = () => {
   };
 
   // Handle form changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     if (formData) {
-      setFormData(prev => prev ? { ...prev, [name]: value } : null);
+      setFormData((prev) => (prev ? { ...prev, [name]: value } : null));
     }
   };
 
@@ -118,7 +157,7 @@ const ManageProperty = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (formData && file) {
-      setFormData(prev => prev ? { ...prev, image: file as File } : null);
+      setFormData((prev) => (prev ? { ...prev, image: file as File } : null));
     }
   };
 
@@ -130,7 +169,8 @@ const ManageProperty = () => {
     toast.loading("Updating property...", { id: "update-property" });
 
     try {
-      let imageUrl: string = typeof formData.image === 'string' ? formData.image : '';
+      let imageUrl: string =
+        typeof formData.image === "string" ? formData.image : "";
 
       // If a new image file is selected, upload it
       if (formData.image && formData.image instanceof File) {
@@ -166,6 +206,7 @@ const ManageProperty = () => {
         image: imageUrl,
         progress: formData.progress,
         updates: formData.updates,
+        Highlights: formData.Highlights,
         attributes: [formData.attributes],
         value_parameters: [formData.value_parameters],
       };
@@ -187,30 +228,55 @@ const ManageProperty = () => {
       console.log("Update result:", data);
 
       toast.success("Property updated successfully", { id: "update-property" });
-      
+
       // Refresh properties list
       await fetchProperties();
-      
+
       // Update selected property with the returned data
       if (data && data.length > 0) {
-        const updatedProperty = {
-          ...data[0],
-          progress: Array.isArray(data[0].progress) ? data[0].progress : [],
-          updates: Array.isArray(data[0].updates) ? data[0].updates : [],
-          attributes: Array.isArray(data[0].attributes) && data[0].attributes.length > 0 
-            ? data[0].attributes[0] 
-            : { sharePerNFT: 0, initialSharePrice: 0, initialPropertyValue: 0 },
-          value_parameters: Array.isArray(data[0].value_parameters) && data[0].value_parameters.length > 0
-            ? data[0].value_parameters[0]
-            : { roi: 0, appreciation: 0, rentalYield: 0 }
+        const returned = data[0] as Record<string, unknown>;
+        const defaultAttributes = {
+          sharePerNFT: 0,
+          initialSharePrice: 0,
+          initialPropertyValue: 0,
         };
+        const defaultValueParams = { roi: 0, appreciation: 0, rentalYield: 0 };
+        const rawAttributes = returned["attributes"];
+        const attributes = Array.isArray(rawAttributes)
+          ? rawAttributes[0] ?? defaultAttributes
+          : rawAttributes && typeof rawAttributes === "object"
+          ? rawAttributes
+          : defaultAttributes;
+        const rawValueParams = returned["value_parameters"];
+        const valueParameters = Array.isArray(rawValueParams)
+          ? rawValueParams[0] ?? defaultValueParams
+          : rawValueParams && typeof rawValueParams === "object"
+          ? rawValueParams
+          : defaultValueParams;
+        const highlights = Array.isArray(returned["Highlights"])
+          ? (returned["Highlights"] as unknown[])
+          : [];
+        const updatedProperty = {
+          ...(returned as object),
+          progress: Array.isArray(returned["progress"])
+            ? (returned["progress"] as unknown[])
+            : [],
+          updates: Array.isArray(returned["updates"])
+            ? (returned["updates"] as unknown[])
+            : [],
+          Highlights: highlights as Highlight[],
+          attributes,
+          value_parameters: valueParameters,
+        } as PropertyData;
         setSelectedProperty(updatedProperty);
         setFormData(updatedProperty);
       }
-      
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error updating property:", error);
-      toast.error("Failed to update property", { id: "update-property" });
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to update property: ${message}`, {
+        id: "update-property",
+      });
     } finally {
       setUpdating(false);
     }
@@ -228,7 +294,9 @@ const ManageProperty = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Manage Properties</h1>
         <Button onClick={fetchProperties} variant="outline" disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
@@ -285,13 +353,25 @@ const ManageProperty = () => {
                       <CardContent className="p-4">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <h3 className="font-medium truncate">{property.name}</h3>
-                            <Badge variant={property.status === "trading" ? "default" : "secondary"}>
+                            <h3 className="font-medium truncate">
+                              {property.name}
+                            </h3>
+                            <Badge
+                              variant={
+                                property.status === "trading"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                            >
                               {property.status}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">{property.location}</p>
-                          <p className="text-sm font-medium">${property.price.toLocaleString()}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {property.location}
+                          </p>
+                          <p className="text-sm font-medium">
+                            ${property.price.toLocaleString()}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
@@ -313,7 +393,13 @@ const ManageProperty = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <form onSubmit={(e) => { e.preventDefault(); handleUpdate(); }} className="space-y-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleUpdate();
+                  }}
+                  className="space-y-4"
+                >
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -329,7 +415,11 @@ const ManageProperty = () => {
                       <Label htmlFor="status">Property Status</Label>
                       <Select
                         value={formData.status}
-                        onValueChange={(value) => setFormData(prev => prev ? { ...prev, status: value } : null)}
+                        onValueChange={(value) =>
+                          setFormData((prev) =>
+                            prev ? { ...prev, status: value } : null
+                          )
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -409,7 +499,7 @@ const ManageProperty = () => {
                       accept="image/*"
                       onChange={handleImageChange}
                     />
-                    {formData.image && typeof formData.image === 'string' && (
+                    {formData.image && typeof formData.image === "string" && (
                       <div className="mt-2">
                         <img
                           src={formData.image}
@@ -430,14 +520,83 @@ const ManageProperty = () => {
                   {/* Progress Management */}
                   <ProgressManager
                     progress={formData.progress}
-                    onChange={(progress) => setFormData(prev => prev ? { ...prev, progress } : null)}
+                    onChange={(progress) =>
+                      setFormData((prev) =>
+                        prev ? { ...prev, progress } : null
+                      )
+                    }
                   />
 
                   {/* Updates Management */}
                   <UpdateManager
                     updates={formData.updates}
-                    onChange={(updates) => setFormData(prev => prev ? { ...prev, updates } : null)}
+                    onChange={(updates) =>
+                      setFormData((prev) =>
+                        prev ? { ...prev, updates } : null
+                      )
+                    }
                   />
+
+                  <Separator />
+
+                  {/* Highlights */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base">Highlights</Label>
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        onClick={() =>
+                          setFormData((prev) =>
+                            prev
+                              ? { ...prev, Highlights: [...prev.Highlights, { highlight: "" }] }
+                              : null
+                          )
+                        }
+                      >
+                        Add Highlight
+                      </Button>
+                    </div>
+                    {formData.Highlights.length === 0 ? (
+                      <p className="text-sm text-muted-foreground italic mt-2">No highlights added yet.</p>
+                    ) : (
+                      <div className="space-y-3 mt-3">
+                        {formData.Highlights.map((h, idx) => (
+                          <div key={idx} className="flex gap-2">
+                            <Input
+                              placeholder={`Highlight ${idx + 1}`}
+                              value={h.highlight}
+                              onChange={(e) =>
+                                setFormData((prev) => {
+                                  if (!prev) return prev;
+                                  const next = [...prev.Highlights];
+                                  next[idx] = { highlight: e.target.value };
+                                  return { ...prev, Highlights: next };
+                                })
+                              }
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() =>
+                                setFormData((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        Highlights: prev.Highlights.filter((_, i) => i !== idx),
+                                      }
+                                    : null
+                                )
+                              }
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   <Separator />
 
@@ -450,32 +609,65 @@ const ManageProperty = () => {
                         <Input
                           type="number"
                           value={formData.attributes.sharePerNFT}
-                          onChange={(e) => setFormData(prev => prev ? ({
-                            ...prev,
-                            attributes: { ...prev.attributes, sharePerNFT: Number(e.target.value) }
-                          }) : null)}
+                          onChange={(e) =>
+                            setFormData((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    attributes: {
+                                      ...prev.attributes,
+                                      sharePerNFT: Number(e.target.value),
+                                    },
+                                  }
+                                : null
+                            )
+                          }
                         />
                       </div>
                       <div>
-                        <Label htmlFor="initialSharePrice">Initial Share Price (USD)</Label>
+                        <Label htmlFor="initialSharePrice">
+                          Initial Share Price (USD)
+                        </Label>
                         <Input
                           type="number"
                           value={formData.attributes.initialSharePrice}
-                          onChange={(e) => setFormData(prev => prev ? ({
-                            ...prev,
-                            attributes: { ...prev.attributes, initialSharePrice: Number(e.target.value) }
-                          }) : null)}
+                          onChange={(e) =>
+                            setFormData((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    attributes: {
+                                      ...prev.attributes,
+                                      initialSharePrice: Number(e.target.value),
+                                    },
+                                  }
+                                : null
+                            )
+                          }
                         />
                       </div>
                       <div>
-                        <Label htmlFor="initialPropertyValue">Initial Property Value (USD)</Label>
+                        <Label htmlFor="initialPropertyValue">
+                          Initial Property Value (USD)
+                        </Label>
                         <Input
                           type="number"
                           value={formData.attributes.initialPropertyValue}
-                          onChange={(e) => setFormData(prev => prev ? ({
-                            ...prev,
-                            attributes: { ...prev.attributes, initialPropertyValue: Number(e.target.value) }
-                          }) : null)}
+                          onChange={(e) =>
+                            setFormData((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    attributes: {
+                                      ...prev.attributes,
+                                      initialPropertyValue: Number(
+                                        e.target.value
+                                      ),
+                                    },
+                                  }
+                                : null
+                            )
+                          }
                         />
                       </div>
                     </div>
@@ -485,17 +677,28 @@ const ManageProperty = () => {
 
                   {/* Value Parameters */}
                   <div>
-                    <h3 className="text-lg font-medium mb-4">Value Parameters</h3>
+                    <h3 className="text-lg font-medium mb-4">
+                      Value Parameters
+                    </h3>
                     <div className="grid gap-4 md:grid-cols-3">
                       <div>
                         <Label htmlFor="roi">ROI (%)</Label>
                         <Input
                           type="number"
                           value={formData.value_parameters.roi}
-                          onChange={(e) => setFormData(prev => prev ? ({
-                            ...prev,
-                            value_parameters: { ...prev.value_parameters, roi: Number(e.target.value) }
-                          }) : null)}
+                          onChange={(e) =>
+                            setFormData((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    value_parameters: {
+                                      ...prev.value_parameters,
+                                      roi: Number(e.target.value),
+                                    },
+                                  }
+                                : null
+                            )
+                          }
                         />
                       </div>
                       <div>
@@ -503,10 +706,19 @@ const ManageProperty = () => {
                         <Input
                           type="number"
                           value={formData.value_parameters.appreciation}
-                          onChange={(e) => setFormData(prev => prev ? ({
-                            ...prev,
-                            value_parameters: { ...prev.value_parameters, appreciation: Number(e.target.value) }
-                          }) : null)}
+                          onChange={(e) =>
+                            setFormData((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    value_parameters: {
+                                      ...prev.value_parameters,
+                                      appreciation: Number(e.target.value),
+                                    },
+                                  }
+                                : null
+                            )
+                          }
                         />
                       </div>
                       <div>
@@ -514,10 +726,19 @@ const ManageProperty = () => {
                         <Input
                           type="number"
                           value={formData.value_parameters.rentalYield}
-                          onChange={(e) => setFormData(prev => prev ? ({
-                            ...prev,
-                            value_parameters: { ...prev.value_parameters, rentalYield: Number(e.target.value) }
-                          }) : null)}
+                          onChange={(e) =>
+                            setFormData((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    value_parameters: {
+                                      ...prev.value_parameters,
+                                      rentalYield: Number(e.target.value),
+                                    },
+                                  }
+                                : null
+                            )
+                          }
                         />
                       </div>
                     </div>
@@ -525,16 +746,33 @@ const ManageProperty = () => {
 
                   {/* Action Buttons */}
                   <div className="flex gap-3 pt-4">
-                    <Button type="submit" disabled={updating} className="flex-1">
+                    <Button
+                      type="submit"
+                      disabled={updating}
+                      className="flex-1"
+                    >
                       <Save className="h-4 w-4 mr-2" />
                       {updating ? "Updating..." : "Update Property"}
                     </Button>
-                    <Button type="button" variant="outline" onClick={handleReset}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                    >
                       <X className="h-4 w-4 mr-2" />
                       Reset
                     </Button>
-                    <Button type="button" variant="secondary" onClick={fetchProperties} disabled={loading}>
-                      <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={fetchProperties}
+                      disabled={loading}
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 mr-2 ${
+                          loading ? "animate-spin" : ""
+                        }`}
+                      />
                       Refresh Data
                     </Button>
                   </div>
@@ -547,7 +785,10 @@ const ManageProperty = () => {
                 <div className="text-center text-muted-foreground">
                   <Edit className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="text-lg">Select a property to edit</p>
-                  <p className="text-sm">Choose a property from the list to view and update its details</p>
+                  <p className="text-sm">
+                    Choose a property from the list to view and update its
+                    details
+                  </p>
                 </div>
               </CardContent>
             </Card>
