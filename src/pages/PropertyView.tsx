@@ -287,7 +287,7 @@ const PropertyView: React.FC = () => {
                 <div className="flex flex-col leading-tight">
                   <p className="text-black text-md">Carbon Credits</p>
                   <p className="font-bold text-black text-md">
-                    {attributes?.carbonCredits ?? "N/A"}
+                    {data?.totalShares ?? "N/A"}
                   </p>
                 </div>
               </div>
@@ -417,10 +417,10 @@ const PropertyView: React.FC = () => {
             </div>
             <div className="py-3 my-0 divider before:bg-black/5 after:bg-black/5"></div>
             <div className="grid w-full grid-cols-4 mt-0 ">
-              <div className="flex flex-col items-center justify-center">
+              {/* <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">Owners</p>
                 <p className="text-xl font-semibold">{attributes?.owners ?? "N/A"}</p>
-              </div>
+              </div> */}
               <div className="flex flex-col items-center justify-center">
                 <p className="text-black text-md">IRR</p>
                 <p className="text-xl font-semibold">{attributes?.irr ?? "11.1%"}</p>
@@ -483,10 +483,6 @@ const PropertyView: React.FC = () => {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-black">Shares Distribution</h3>
-                  {/* <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                    <span className="text-xs text-gray-500">LIVE</span>
-                  </div> */}
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="flex items-center gap-1">

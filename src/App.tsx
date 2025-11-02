@@ -22,6 +22,7 @@
   import CreatePropertyForm from "./Admin/createProperty/createProperty";
 import { KycProvider } from "./hooks/KycContext";
 import { useAuth } from "./hooks/AuthContext";
+import ManageProperty from "./Admin/manageProperty/manage.property";
 
   function App() {
     const location = useLocation();
@@ -94,6 +95,17 @@ import { useAuth } from "./hooks/AuthContext";
               <AdminMiddleware>
                 <Admin>
                   <CreatePropertyForm />
+                </Admin>
+              </AdminMiddleware>
+            }
+          />
+
+          <Route
+            path="/admin/manage"
+            element={
+              <AdminMiddleware>
+                <Admin>
+                  <ManageProperty />
                 </Admin>
               </AdminMiddleware>
             }

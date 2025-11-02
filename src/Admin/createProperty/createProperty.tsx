@@ -14,6 +14,7 @@ import { toast } from "sonner";
 export default function CreatePropertyForm() {
   const [progress,] = useState<ProgressItem[]>([]);
   const [updates,] = useState<Update[]>([]);
+  type Highlight = { highlight: string };
   const [formData, setFormData] = useState({
     name: "",
     status: "",
@@ -26,9 +27,9 @@ export default function CreatePropertyForm() {
     image: null as File | null,
     progress: progress,
     updates: updates,
+    Highlights: [] as Highlight[],
     attributes: {
       sharePerNFT: 0,
-      propertyType: "",
       initialSharePrice: 0,
       initialPropertyValue: 0,
     },
@@ -82,10 +83,19 @@ export default function CreatePropertyForm() {
     const { error } = await supabase
       .from("property_data")
       .insert({
-        ...formData,
+        name: formData.name,
+        status: formData.status,
+        price: Number(formData.price),
+        available_shares: Number(formData.available_shares),
+        totalShares: Number(formData.available_shares),
+        location: formData.location,
+        type: formData.type,
+        growth: formData.growth,
+        description: formData.description,
         image: imageUrl,
         progress: formData.progress,
         updates: formData.updates,
+        Highlights: formData.Highlights,
         attributes: [formData.attributes],
         value_parameters: [formData.value_parameters],
       });
@@ -113,9 +123,9 @@ export default function CreatePropertyForm() {
       image: null,
       progress: [],
       updates: [],
+      Highlights: [],
       attributes: {
         sharePerNFT: 0,
-        propertyType: "",
         initialSharePrice: 0,
         initialPropertyValue: 0,
       },
@@ -192,6 +202,55 @@ export default function CreatePropertyForm() {
             <Separator />
 
             <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-base">Highlights</Label>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={() =>
+                    setFormData(prev => ({ ...prev, Highlights: [...prev.Highlights, { highlight: "" }] }))
+                  }
+                >
+                  Add Highlight
+                </Button>
+              </div>
+              {formData.Highlights.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic mt-2">No highlights added yet.</p>
+              ) : (
+                <div className="space-y-3 mt-3">
+                  {formData.Highlights.map((h, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <Input
+                        placeholder={`Highlight ${idx + 1}`}
+                        value={h.highlight}
+                        onChange={(e) =>
+                          setFormData(prev => {
+                            const next = [...prev.Highlights];
+                            next[idx] = { highlight: e.target.value };
+                            return { ...prev, Highlights: next };
+                          })
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          setFormData(prev => ({
+                            ...prev,
+                            Highlights: prev.Highlights.filter((_, i) => i !== idx),
+                          }))
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="property_attributes" className="text-base">Property Attributes</Label>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -227,17 +286,6 @@ export default function CreatePropertyForm() {
                     onChange={(e) => setFormData(prev => ({
                       ...prev,
                       attributes: { ...prev.attributes, initialPropertyValue: Number(e.target.value) }
-                    }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="propertyType">Property Type</Label>
-                  <Input
-                    name="propertyType"
-                    value={formData.attributes.propertyType}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      attributes: { ...prev.attributes, propertyType: e.target.value }
                     }))}
                   />
                 </div>
